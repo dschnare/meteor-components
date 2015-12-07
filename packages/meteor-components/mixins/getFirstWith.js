@@ -8,12 +8,12 @@ getFirstWith = function (origin, prop) {
     } else {
       origin = this;
     }
-    chain = [origin].concat(origin.mixins ? origin.mixins.$instances : []);
+    chain = [origin].concat(origin.mixins ? origin._mixinInstances : []);
   } else if ('owner' in origin && origin.owner.mixins) {
-    let k = origin.owner.mixins.$instances.indexOf(origin);
-    chain = origin.owner.mixins.$instances.slice(k + 1);
+    let k = origin.owner._mixinInstances.indexOf(origin);
+    chain = origin.owner._mixinInstances.slice(k + 1);
   } else if (origin.mixins) {
-    chain = origin.mixins.$instances;
+    chain = origin._mixinInstances;
   }
 
   for (let obj of chain) {

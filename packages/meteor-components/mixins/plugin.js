@@ -7,7 +7,7 @@ Component.onComponentInitialize(function (component, template) {
   component.getFirstWith = getFirstWith;
 
   if (typeof component.mixins === 'function') {
-    let mixinInstances = component.mixins.$instances = [];
+    let mixinInstances = component._mixinInstances = [];
     let mixins = component.mixins();
 
     mixins.forEach(function (Mixin) {
@@ -45,7 +45,7 @@ Component.onComponentInitialize(function (component, template) {
     });
 
     template.onDestroyed(function () {
-      let mixinInstances = component.mixins.$instances;
+      let mixinInstances = component._mixinInstances;
       while (mixinInstances.length) {
         let mixin = mixinInstances.pop();
         if (mixin.onDestroyed) mixin.onDestroyed();
