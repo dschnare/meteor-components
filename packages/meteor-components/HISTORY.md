@@ -1,6 +1,12 @@
+# 0.1.2
+
+**Dec. 7, 2015**
+
+- Add support for `template()` method on component instances so they can specify the template to override.
+
 # 0.1.1
 
-**Dec. 6, 2015**
+**Dec. 7, 2015**
 
 - Save mixin instances on `_mixinInstances` component instance property instead of on the `mixins` component instance method.
 
