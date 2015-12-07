@@ -15,6 +15,7 @@ Component = function (componentName, Ctor) {
 
   if (template) {
     let init = initComponentTemplate.bind(void 0, component);
+    component.name = componentName;
     Template[templateName] = extendTemplate(template, init);
   } else {
     throw new Error('Template not found: ' + templateName);
@@ -64,6 +65,10 @@ function initComponentTemplate(component, template) {
   if (typeof component.helpers === 'function') {
     template.helpers(Component.bindTo(component.helpers() || {}, component));
   }
+
+  template.helpers({
+    componentName: function () { return component.name; }
+  });
 
   template.onCreated(function () {
     hierarchy.push(component);
