@@ -1,3 +1,10 @@
+# 0.2.0
+
+**Dec. 7, 2015**
+
+- Refactor `template()` method so that it is expected to be statically available on the component constructor or object.
+- Add support for `template` static property that specifies the template to override.
+
 # 0.1.3
 
 **Dec. 7, 2015**

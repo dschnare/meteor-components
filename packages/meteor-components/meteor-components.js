@@ -8,14 +8,12 @@ callbacks.componentInitialize = [];
 callbacks.componentInitialized = [];
 
 Component = function (componentName, Ctor) {
-  let component = instantiateComponent(Ctor, hierarchy.peek());
-  let templateName = typeof component.template === 'function' ?
-    component.template() || componentName : componentName;
+  let templateName = typeof Ctor.template === 'function' ?
+    (Ctor.template() || componentName) : (Ctor.template || componentName);
   let template = Template[templateName];
 
   if (template) {
-    let init = initComponentTemplate.bind(void 0, component);
-    component.name = componentName;
+    let init = initComponentTemplate.bind(void 0, Ctor, componentName);
     Template[templateName] = extendTemplate(template, init);
   } else {
     throw new Error('Template not found: ' + templateName);
@@ -51,7 +49,9 @@ Component.onComponentInitialized = function (callback) {
   callbacks.componentInitialized.push(callback);
 };
 
-function initComponentTemplate(component, template) {
+function initComponentTemplate(Ctor, componentName, template) {
+  let component = instantiateComponent(Ctor, componentName, hierarchy.peek());
+
   callbacks.componentInitialize.forEach(function (callback) {
     callback(component, template);
   });
@@ -129,7 +129,7 @@ function extendTemplate(template, init) {
   });
 }
 
-function instantiateComponent(CtorOrObject, parent) {
+function instantiateComponent(CtorOrObject, componentName, parent) {
   let component;
 
   if (typeof CtorOrObject === 'function') {
@@ -138,6 +138,7 @@ function instantiateComponent(CtorOrObject, parent) {
     component = Object.create(CtorOrObject);
   }
 
+  component.name = componentName;
   component.parent = parent;
   component.children = [];
   component.refs = {};
