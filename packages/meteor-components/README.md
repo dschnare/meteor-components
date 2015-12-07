@@ -16,7 +16,7 @@ extension for Meteor templates.
     // Show Gravatar avatar image.
     // See: https://secure.gravatar.com/site/implement/hash/
     // For a more in-depth look at the component API
-    // see the GitHub repo.
+    // see https://github.com/dschnare/meteor-components/blob/master/client/index.js.
     Component.Gravatar = {
       helpers: function () {
         return {
