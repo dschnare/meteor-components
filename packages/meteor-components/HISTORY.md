@@ -1,3 +1,10 @@
+# 0.1.3
+
+**Dec. 7, 2015**
+
+- Add the `name` property to each component instance after they are created.
+- Add `componentName` helper for each component for conveintly accessing the name of the component.
+
 # 0.1.2
 
 **Dec. 7, 2015**
