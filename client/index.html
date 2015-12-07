@@ -1,0 +1,24 @@
+<head>
+  <title>Particles Components</title>
+</head>
+
+<body>
+  {{>index}}
+</body>
+
+<template name="index">
+  {{#Container}}
+    {{>Button}}
+    {{>Button}}
+  {{/Container}}
+</template>
+
+<template name="Button">
+  <button data-ref="myButton">Click Me</button>
+</template>
+
+<template name="Container">
+  <div>
+    {{>Template.contentBlock}}
+  </div>
+</template>

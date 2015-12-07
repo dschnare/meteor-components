@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"target": "ES6"
+	},
+  "files": [
+    "client/index.js",
+    "packages/meteor-components/meteor-components.js",
+    "packages/meteor-components/mixins/getFirstWith.js",
+    "packages/meteor-components/mixins/callFirstWith.js",
+    "packages/meteor-components/mixins/instantiateMixin.js",
+    "packages/meteor-components/mixins/plugin.js"
+  ]
+}
