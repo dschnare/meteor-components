@@ -69,3 +69,16 @@ as an example, Meteor Components would not be the way it is today.
 But if you're looking for a similar Blaze Components framework
 with a smaller footprint and doesn't inject istself deep into
 the Blaze API then try Meteor Components.
+
+## Difference With Blaze Components
+
+- Only keyword arguments are supported when including a component
+  template.
+- Components can be used interchangably as mixins.
+- Elements with `data-ref` or `ref` attributes will be cached in
+  `this.refs`.
+- Helpers and event listeners are bound to the component instance.
+- No manditory class hierarchy or base classes.
+- Leverages the templating system without introducing new concepts
+  that require low-level modification (i.e. keep Meteor the
+  way it is).
