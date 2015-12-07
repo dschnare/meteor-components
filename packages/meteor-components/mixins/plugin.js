@@ -29,7 +29,8 @@ Component.onComponentInitialize(function (component, template) {
       let tplInst = this;
 
       mixins.forEach(function (mixin) {
-        if (mixin.onCreated) mixin.onCreated(tplInst);
+        mixin.templateInstance = tplInst;
+        if (mixin.onCreated) mixin.onCreated();
       });
     });
 
@@ -39,7 +40,7 @@ Component.onComponentInitialize(function (component, template) {
 
       mixins.forEach(function (mixin) {
         mixin.refs = Object.create(refs);
-        if (mixin.onRendered) mixin.onRendered(tplInst);
+        if (mixin.onRendered) mixin.onRendered();
       });
     });
 
@@ -47,8 +48,10 @@ Component.onComponentInitialize(function (component, template) {
       let mixinInstances = component.mixins.$instances;
       while (mixinInstances.length) {
         let mixin = mixinInstances.pop();
-        if (mixin.onDestroyed) mixin.onDestroyed(this);
+        if (mixin.onDestroyed) mixin.onDestroyed();
         mixin.owner = null;
+        mixin.refs = null;
+        mixin.templateInstance = null;
       }
     });
   }

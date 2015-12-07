@@ -67,7 +67,8 @@ function initComponentTemplate(Ctor, template) {
   template.onCreated(function () {
     hierarchy.push(component);
 
-    if (component.onCreated) component.onCreated(this);
+    component.templateInstance = this;
+    if (component.onCreated) component.onCreated();
   });
 
   template.onRendered(function () {
@@ -75,11 +76,15 @@ function initComponentTemplate(Ctor, template) {
 
     Component.getRefs(this, component.refs);
 
-    if (component.onRendered) component.onRendered(this);
+    if (component.onRendered) component.onRendered();
   });
 
   template.onDestroyed(function () {
-    if (component.onDestroyed) component.onDestroyed(this);
+    if (component.onDestroyed) component.onDestroyed();
+    component.templateInstance = null;
+    component.parent = null;
+    component.refs = null;
+    component.children = [];
   });
 
   callbacks.componentInitialized.forEach(function (callback) {
@@ -100,13 +105,19 @@ function extendTemplate(template, init) {
     // NOTE: If the Blaze.Template code changes then this will need to
     // be updated, but it's only in this spot. If this turns out to be a problem
     // then we'll drop support for it.
-    copy.__eventMaps = template.__eventMaps.slice();
-    copy.__helpers = Object.create(template.__helpers);
-    copy._callbacks = {
-      created: template._callbacks.created.slice(),
-      rendered: template._callbacks.rendered.slice(),
-      destroyed: template._callbacks.destroyed.slice()
-    };
+    if (template.__eventMaps) {
+      copy.__eventMaps = template.__eventMaps.slice();
+    }
+    if (template.__helpers) {
+      copy.__helpers = Object.create(template.__helpers);
+    }
+    if (template._callbacks) {
+      copy._callbacks = {
+        created: template._callbacks.created.slice(),
+        rendered: template._callbacks.rendered.slice(),
+        destroyed: template._callbacks.destroyed.slice()
+      };
+    }
     init(copy);
     return copy;
   });

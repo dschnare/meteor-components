@@ -7,18 +7,9 @@
 </body>
 
 <template name="index">
-  {{#Container}}
-    {{>Button}}
-    {{>Button}}
-  {{/Container}}
+  {{>Gravatar email="schnare.d@gmail.com"}}
 </template>
 
-<template name="Button">
-  <button data-ref="myButton">Click Me</button>
-</template>
-
-<template name="Container">
-  <div>
-    {{>Template.contentBlock}}
-  </div>
+<template name="Gravatar">
+  <img data-ref="avatar" src="{{gravatarUrl}}" />
 </template>
