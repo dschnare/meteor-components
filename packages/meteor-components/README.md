@@ -21,7 +21,7 @@ extension for Meteor templates.
       helpers: function () {
         return {
           gravatarUrl: function () {
-            var email = this.templateInstance.data().email;
+            var email = this.data().email;
             if (email) {
               email = email.replace(/^\s|\s$/g, '');
               var hash = CryptoJS.MD5(email);
