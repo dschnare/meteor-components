@@ -5,9 +5,15 @@
   "files": [
     "client/index.js",
     "packages/meteor-components/meteor-components.js",
-    "packages/meteor-components/mixins/getFirstWith.js",
-    "packages/meteor-components/mixins/callFirstWith.js",
-    "packages/meteor-components/mixins/instantiateMixin.js",
-    "packages/meteor-components/mixins/plugin.js"
+    "packages/meteor-components/polyfills.js",
+    "packages/meteor-components/plugins/refs/plugin.js",
+    "packages/meteor-components/plugins/templateInstanceMethods/plugin.js",
+    "packages/meteor-components/plugins/timeoutMethods/plugin.js",
+    "packages/meteor-components/plugins/componentNameHelper/plugin.js",
+    "packages/meteor-components/plugins/hierarchy/plugin.js",
+    "packages/meteor-components/plugins/mixins/getFirstWith.js",
+    "packages/meteor-components/plugins/mixins/callFirstWith.js",
+    "packages/meteor-components/plugins/mixins/instantiateMixin.js",
+    "packages/meteor-components/plugins/mixins/plugin.js"
   ]
 }

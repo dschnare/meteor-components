@@ -1,6 +1,20 @@
+# 0.3.0
+
+**Dec. 14, 2015**
+
+- Refactor all features outside of core as a plugin.
+- Implement a plugin to expose a similar API on the component as that is available on a template instance.
+- Implement a plugin to expose timeout functions that will automtacially be cleared on the component is disposed.
+- Implement a plugin to expose a refs object that holds a reference to each element with a `data-ref` or `ref` attribute.
+- Implement a plugin to expose a helper to render the component name.
+- Implement a plugin to manage and initialize the component hierarchy properties on a component.
+- Refactor how templates are extended; override constructView() instead of creating a nested template. This keeps the data context available throughout the hierarhcy.
+- Implement polyfils for `Object.create`, `Array.prototype.indexOf`, `Array.prototype.forEach` and `Function.prototype.bind`.
+- Require components defined on `Component` to use upper camel case naming convention. This means lower camel case components will be skipped. This implies that any other properties on `Component` will be skipped. If this is a problem users can still use `Component(name, Ctor)` as a function.
+
 # 0.2.0
 
-**Dec. 7, 2015**
+**Dec. 8, 2015**
 
 - Refactor `template()` method so that it is expected to be statically available on the component constructor or object.
 - Add support for `template` static property that specifies the template to override.

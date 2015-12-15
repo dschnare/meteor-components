@@ -82,3 +82,6 @@ the Blaze API then try Meteor Components.
 - Leverages the templating system without introducing new concepts
   that require low-level modification (i.e. keep Meteor the
   way it is).
+- Plugins are used to extend the components while they are being
+  instantiated. This makes it easy to augment components without
+  a lengthy inheritence hierarchy.

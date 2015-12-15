@@ -1,8 +1,5 @@
 /*global Component, createComponentView, componentRegistry,
 Template, Blaze, Meteor*/
-let hierarchy = [];
-hierarchy.peek = function () { return this[this.length - 1]; };
-
 let callbacks = {};
 callbacks.componentInitialize = [];
 callbacks.componentInitialized = [];
@@ -14,18 +11,16 @@ Component = function (componentName, Ctor) {
 
   if (template) {
     let init = initComponentTemplate.bind(void 0, Ctor, componentName);
-    Template[templateName] = extendTemplate(template, init);
+    // We override the template and we also set the template under the
+    // component's name so that way you can use either the template name
+    // or the component's name in your views. This is only useful if your
+    // component name and template names are different.
+    Template[templateName]
+      = Template[componentName]
+      = extendTemplate(template, init);
   } else {
     throw new Error('Template not found: ' + templateName);
   }
-};
-
-Component.getRefs = function (tplInstance, refs = null) {
-  refs = refs || {};
-  tplInstance.findAll('[data-ref], [ref]').forEach(function (el) {
-    refs[el.getAttribute('data-ref') || el.getAttribtue('ref')] = el;
-  });
-  return refs;
 };
 
 // Wraps all functions in the funcMap by binding them
@@ -50,7 +45,7 @@ Component.onComponentInitialized = function (callback) {
 };
 
 function initComponentTemplate(Ctor, componentName, template) {
-  let component = instantiateComponent(Ctor, componentName, hierarchy.peek());
+  let component = instantiateComponent(Ctor, componentName);
 
   callbacks.componentInitialize.forEach(function (callback) {
     callback(component, template);
@@ -66,31 +61,16 @@ function initComponentTemplate(Ctor, componentName, template) {
     template.helpers(Component.bindTo(component.helpers() || {}, component));
   }
 
-  template.helpers({
-    componentName: function () { return component.name; }
-  });
-
   template.onCreated(function () {
-    hierarchy.push(component);
-
-    component.templateInstance = this;
     if (component.onCreated) component.onCreated();
   });
 
   template.onRendered(function () {
-    hierarchy.pop();
-
-    Component.getRefs(this, component.refs);
-
     if (component.onRendered) component.onRendered();
   });
 
   template.onDestroyed(function () {
     if (component.onDestroyed) component.onDestroyed();
-    component.templateInstance = null;
-    component.parent = null;
-    component.refs = null;
-    component.children = [];
   });
 
   callbacks.componentInitialized.forEach(function (callback) {
@@ -102,22 +82,22 @@ function initComponentTemplate(Ctor, componentName, template) {
 // render function that will return a copy of the template passed in.
 // The init() function will be called with the template copy.
 function extendTemplate(template, init) {
-  return new Blaze.Template('(component)', function () {
-    let copy = new Blaze.Template(template.viewName, template.renderFunction);
-    // Copy over the state so that if events, helpers or callbacks are defined
-    // via the Template.MyTemplate API then they are used in each component
-    // template. This effectively makes the template the "prototype" for the
-    // component template.
-    // NOTE: If the Blaze.Template code changes then this will need to
-    // be updated, but it's only in this spot. If this turns out to be a problem
-    // then we'll drop support for it.
-    if (template.__eventMaps) {
-      copy.__eventMaps = template.__eventMaps.slice();
+  // We depend on a very small set of Blaze APIs to get the job done.
+  // We override the constructView() method so that we can copy the
+  // template and modify it before it is passed off to the view.
+  let constructView = template.constructView;
+  template.constructView = function (...args) {
+    let copy = Object.create(template);
+    // We have to copy the helpers, eventMaps and callbacks
+    // properties otherwise we'll be setting helpers and listeners
+    // up for all template instances.
+    if (copy.__helpers) {
+      copy.__helpers = Object.create(copy.__helpers);
     }
-    if (template.__helpers) {
-      copy.__helpers = Object.create(template.__helpers);
+    if (copy.__eventMaps) {
+      copy.__eventMaps = copy.__eventMaps.slice();
     }
-    if (template._callbacks) {
+    if (copy._callbacks) {
       copy._callbacks = {
         created: template._callbacks.created.slice(),
         rendered: template._callbacks.rendered.slice(),
@@ -125,11 +105,12 @@ function extendTemplate(template, init) {
       };
     }
     init(copy);
-    return copy;
-  });
+    return constructView.call(copy, ...args);
+  };
+  return template;
 }
 
-function instantiateComponent(CtorOrObject, componentName, parent) {
+function instantiateComponent(CtorOrObject, componentName) {
   let component;
 
   if (typeof CtorOrObject === 'function') {
@@ -139,37 +120,19 @@ function instantiateComponent(CtorOrObject, componentName, parent) {
   }
 
   component.name = componentName;
-  component.parent = parent;
-  component.children = [];
-  component.refs = {};
-
-  if (component.parent) {
-    component.parent.children.push(component);
-  }
-
   return component;
 }
 
-// Method names on Component that we need to skip over
-// when we are enumerating the defined component types.
-let methodNames = [
-  'onComponentInitialize',
-  'onComponentInitialized',
-  'bindTo',
-  'getRefs'
-];
-
 // Enumerate the defined component types. For each component
 // type we define it by calling Component() appropriately.
-if (Meteor.isClient) {
-  Meteor.startup(function () {
-    for (let componentName in Component) {
+Meteor.startup(function () {
+  for (let componentName in Component) {
+    // All components are expected to have a upper camel case naming
+    // convention.
+    if (componentName.charAt(0) ===
+      componentName.charAt(0).toUpperCase()) {
       let Ctor = Component[componentName];
-
-      // Skip methods on Component.
-      if (methodNames.indexOf(componentName) >= 0) continue;
-
       Component(componentName, Ctor);
     }
-  });
-}
+  }
+});

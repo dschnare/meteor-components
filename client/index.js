@@ -19,7 +19,7 @@ Component.Gravatar = {
         // On the component instance there will be a
         // 'templateInstance' property that has a
         // reference to the Blaze.TemplateInstance.
-        var email = this.templateInstance.data.email;
+        var email = this.data().email;
         if (email) {
           email = email.replace(/^\s|\s$/g, '');
           var hash = CryptoJS.MD5(email);
@@ -88,3 +88,5 @@ Component.Gravatar = {
     // Mixins will have had their onDestroyed methods called first.
   }
 };
+
+Component.Shell = {};

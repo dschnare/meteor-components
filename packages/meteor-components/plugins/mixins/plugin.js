@@ -1,7 +1,4 @@
 /*global Component, getFirstWith, callFirstWith, instantiateMixin*/
-
-// Install the mixins plugin.
-
 Component.onComponentInitialize(function (component, template) {
   component.callFristWith = callFirstWith;
   component.getFirstWith = getFirstWith;

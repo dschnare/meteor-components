@@ -1,7 +1,7 @@
 /*global Package*/
 Package.describe({
   name: 'dschnare:meteor-components',
-  version: '0.2.0',
+  version: '0.3.0',
   // Brief, one-line summary of the package.
   summary: 'Simple, lightweight component extension for Meteor templates.',
   // URL to the Git repository containing the source code for this package.
@@ -17,13 +17,25 @@ Package.onUse(function(api) {
   api.use('templating');
 
   api.addFiles([
+    // polyfills
+    'polyfills.js',
     // Core
     'meteor-components.js',
-    // Mixin feature
-    'mixins/getFirstWith.js',
-    'mixins/callFirstWith.js',
-    'mixins/instantiateMixin.js',
-    'mixins/plugin.js'
+    // Refs plugin
+    'plugins/refs/plugin.js',
+    // Hierarchy pugin
+    'plugins/hierarchy/plugin.js',
+    // Component name helper plugin
+    'plugins/componentNameHelper/plugin.js',
+    // Template instance methods plugin
+    'plugins/templateInstanceMethods/plugin.js',
+    // Timeout methods plugin
+    'plugins/timeoutMethods/plugin.js',
+    // Mixins plugin
+    'plugins/mixins/getFirstWith.js',
+    'plugins/mixins/callFirstWith.js',
+    'plugins/mixins/instantiateMixin.js',
+    'plugins/mixins/plugin.js'
   ], 'client');
 
   api.export('Component', 'client');

@@ -7,9 +7,15 @@
 </body>
 
 <template name="index">
-  {{>Gravatar email="schnare.d@gmail.com"}}
+  {{#Shell email="schnare.d@gmail.com"}}
+    {{>Gravatar}}
+  {{/Shell}}
 </template>
 
 <template name="Gravatar">
   <img data-ref="avatar" src="{{gravatarUrl}}" />
+</template>
+
+<template name="Shell">
+  {{>Template.contentBlock this}}
 </template>
