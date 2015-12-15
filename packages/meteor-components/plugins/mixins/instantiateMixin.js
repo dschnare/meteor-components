@@ -9,8 +9,6 @@ instantiateMixin = function (Mixin, owner) {
   }
 
   mixin.owner = owner;
-  mixin.refs = {};
-  mixin.children = []; // This will always be empty.
   mixin.callFristWith = callFirstWith;
   mixin.getFirstWith = getFirstWith;
 

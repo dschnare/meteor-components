@@ -1,3 +1,11 @@
+# 0.3.1
+
+**Dec. 15, 2015**
+
+- Remove `refs`, `children` and `templateInstance` as properties from mixins.
+- Update comments and docs.
+- Save component constructor or object on `Component` to support calling `Component()` directly instead of defining a component as a property on `Component`.
+
 # 0.3.0
 
 **Dec. 14, 2015**

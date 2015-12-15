@@ -9,6 +9,12 @@ Component = function (componentName, Ctor) {
     (Ctor.template() || componentName) : (Ctor.template || componentName);
   let template = Template[templateName];
 
+  // Save the component for reference by other code.
+  // This is only really necessary if the component name
+  // does not follow the upper camel casing naming convention
+  // and thus Component() is the only way the component is defined.
+  Component[componentName] = Ctor;
+
   if (template) {
     let init = initComponentTemplate.bind(void 0, Ctor, componentName);
     // We override the template and we also set the template under the
@@ -123,14 +129,17 @@ function instantiateComponent(CtorOrObject, componentName) {
   return component;
 }
 
+function startsWithUpperCaseLetter(str) {
+  return str.charAt(0) === str.charAt(0).toUpperCase();
+}
+
 // Enumerate the defined component types. For each component
 // type we define it by calling Component() appropriately.
 Meteor.startup(function () {
   for (let componentName in Component) {
-    // All components are expected to have a upper camel case naming
+    // All components are expected to have an upper camel case naming
     // convention.
-    if (componentName.charAt(0) ===
-      componentName.charAt(0).toUpperCase()) {
+    if (startsWithUpperCaseLetter(componentName)) {
       let Ctor = Component[componentName];
       Component(componentName, Ctor);
     }
