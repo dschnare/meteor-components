@@ -1,26 +1,23 @@
-let hierarchy = [];
-hierarchy.peek = function () { return this[this.length - 1]; };
-
-Component.onComponentInitialize(function (component, template) {
-  component.parent = hierarchy.peek();
+/*global Component*/
+Component.onComponentInitializing(function (component, templateInstance) {
+  component.parent = getNearestComponent(templateInstance.view);
   component.children = [];
+  templateInstance.view.component = component;
 
   if (component.parent) {
     component.parent.children.push(component);
   }
-
-  template.onCreated(function () {
-    hierarchy.push(component);
-  });
-
-  template.onRendered(function () {
-    hierarchy.pop();
-  });
 });
 
-Component.onComponentInitialized(function (component, template) {
-  template.onDestroyed(function () {
-    component.parent = null;
-    component.children = [];
-  });
+Component.onComponentDestroyed(function (component, templateInstance) {
+  component.parent = null;
+  component.children = [];
+  templateInstance.view.component = null;
 });
+
+function getNearestComponent(view) {
+  while (view && !view.component) {
+    view = view.originalParentView || view.parentView;
+  }
+  return view ? view.component : undefined;
+}

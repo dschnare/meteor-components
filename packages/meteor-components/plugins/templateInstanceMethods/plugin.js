@@ -1,5 +1,5 @@
 /*global Component, Template*/
-Component.onComponentInitialize(function (component, template) {
+Component.onComponentInitializing(function (component) {
   // Provide convenience methods that mirrors the
   // template instance API.
   component.findAll = function (selector) {
@@ -52,14 +52,4 @@ Component.onComponentInitialize(function (component, template) {
       throw new Error('Component template hasn\'t been created.');
     return this.templateInstance.view;
   };
-
-  template.onCreated(function () {
-    component.templateInstance = this;
-  });
-});
-
-Component.onComponentInitialized(function (component, template) {
-  template.onDestroyed(function () {
-    component.templateInstance = null;
-  });
 });

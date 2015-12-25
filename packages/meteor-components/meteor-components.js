@@ -1,145 +1,234 @@
-/*global Component, createComponentView, componentRegistry,
-Template, Blaze, Meteor*/
-let callbacks = {};
-callbacks.componentInitialize = [];
-callbacks.componentInitialized = [];
+/*global Component, ComponentUtil, Template, Blaze, Meteor*/
+let callbacks = {
+  installing: [],
+  installed: [],
+  creating: [],
+  created: [],
+  initializing: [],
+  initialized: [],
+  readying: [],
+  readied: [],
+  destroying: [],
+  destroyed: [],
+  $trigger(eventType, ...args) {
+    for (let callback of this[eventType]) callback(...args);
+  }
+};
 
 Component = function (componentName, Ctor) {
-  let templateName = typeof Ctor.template === 'function' ?
-    (Ctor.template() || componentName) : (Ctor.template || componentName);
-  let template = Template[templateName];
-
-  // Save the component for reference by other code.
-  // This is only really necessary if the component name
-  // does not follow the upper camel casing naming convention
-  // and thus Component() is the only way the component is defined.
-  Component[componentName] = Ctor;
-
-  if (template) {
-    let init = initComponentTemplate.bind(void 0, Ctor, componentName);
-    // We override the template and we also set the template under the
-    // component's name so that way you can use either the template name
-    // or the component's name in your views. This is only useful if your
-    // component name and template names are different.
-    Template[templateName]
-      = Template[componentName]
-      = extendTemplate(template, init);
-  } else {
-    throw new Error('Template not found: ' + templateName);
-  }
+  installComponent(componentName, Ctor);
 };
 
-// Wraps all functions in the funcMap by binding them
-// to the thisObj. Returns a new object with the bound
-// functions.
-Component.bindTo = function (funcMap, thisObj) {
-  let o = {};
-  for (let k in funcMap) {
-    if (typeof funcMap[k] === 'function') {
-      o[k] = funcMap[k].bind(thisObj);
-    }
-  }
-  return o;
+Component.onComponentInstalling = function (callback) {
+  callbacks.installing.push(callback);
 };
 
-Component.onComponentInitialize = function (callback) {
-  callbacks.componentInitialize.push(callback);
+Component.onComponentInstalled = function (callback) {
+  callbacks.installed.push(callback);
+};
+
+Component.onComponentCreating = function (callback) {
+  callbacks.creating.push(callback);
+};
+
+Component.onComponentCreated = function (callback) {
+  callbacks.created.push(callback);
+};
+
+Component.onComponentInitializing = function (callback) {
+  callbacks.initializing.push(callback);
 };
 
 Component.onComponentInitialized = function (callback) {
-  callbacks.componentInitialized.push(callback);
+  callbacks.initialized.push(callback);
 };
 
-function initComponentTemplate(Ctor, componentName, template) {
-  let component = instantiateComponent(Ctor, componentName);
+Component.onComponentReadying = function (callback) {
+  callbacks.readying.push(callback);
+};
 
-  callbacks.componentInitialize.forEach(function (callback) {
-    callback(component, template);
-  });
+Component.onComponentReadied = function (callback) {
+  callbacks.readied.push(callback);
+};
 
-  if (typeof component.init === 'function') component.init();
+Component.onComponentDestroying = function (callback) {
+  callbacks.destroying.push(callback);
+};
 
-  if (typeof component.events === 'function') {
-    template.events(Component.bindTo(component.events() || {}, component));
+Component.onComponentDestroyed = function (callback) {
+  callbacks.destroyed.push(callback);
+};
+
+// function (componentName, Ctor, templateInstance): component
+Component.hookCreateComponent = null;
+
+function installComponent(componentName, Ctor) {
+  let templateName = typeof Ctor.template === 'function' ?
+    Ctor.template() : Ctor.template;
+  templateName = templateName || componentName;
+  let template = Template[templateName];
+
+  if (!template) {
+    throw new Error(`Template not found "${templateName}"`);
   }
 
-  if (typeof component.helpers === 'function') {
-    template.helpers(Component.bindTo(component.helpers() || {}, component));
+  if (template.$component === true) {
+    throw new Error(`Template "${templateName}" already bound to a component.`);
   }
 
-  template.onCreated(function () {
-    if (component.onCreated) component.onCreated();
-  });
+  Component[componentName] = Ctor;
+  // Clone the template and save it as a property on Template.
+  // This will make the component available in Spacebar templates.
+  let componentTemplate = Object.create(template);
+  // Mark the template as being in use by a component. This will prevent
+  // other components from being installed with this template.
+  componentTemplate.$component = true;
+  Template[componentName] = componentTemplate;
 
-  template.onRendered(function () {
-    if (component.onRendered) component.onRendered();
-  });
+  // Trigger onComponentInstalling(componentName, Ctor, componentTemplate).
+  callbacks.$trigger('installing', componentName, Ctor, componentTemplate);
 
-  template.onDestroyed(function () {
-    if (component.onDestroyed) component.onDestroyed();
-  });
-
-  callbacks.componentInitialized.forEach(function (callback) {
-    callback(component, template);
-  });
-}
-
-// Extend a Blaze.Template by creating a new template that has a
-// render function that will return a copy of the template passed in.
-// The init() function will be called with the template copy.
-function extendTemplate(template, init) {
   // We depend on a very small set of Blaze APIs to get the job done.
   // We override the constructView() method so that we can copy the
-  // template and modify it before it is passed off to the view.
+  // template properties this way any modifications to the template won't affect
+  // other templateInstances/views.
   let constructView = template.constructView;
-  template.constructView = function (...args) {
-    let copy = Object.create(template);
+  componentTemplate.constructView = function (...args) {
     // We have to copy the helpers, eventMaps and callbacks
     // properties otherwise we'll be setting helpers and listeners
-    // up for all template instances.
-    if (copy.__helpers) {
-      copy.__helpers = Object.create(copy.__helpers);
+    // up for all template instances. We wait to copy the helpers and
+    // events until now so that we can be guaranteed that we get them
+    // all since the original template can have new events and helpers added
+    // after the component has been installed.
+    if (template.__helpers) {
+      this.__helpers = Object.create(template.__helpers);
     }
-    if (copy.__eventMaps) {
-      copy.__eventMaps = copy.__eventMaps.slice();
+    if (template.__eventMaps) {
+      this.__eventMaps = template.__eventMaps.slice();
     }
-    if (copy._callbacks) {
-      copy._callbacks = {
+    if (template._callbacks) {
+      this._callbacks = {
         created: template._callbacks.created.slice(),
         rendered: template._callbacks.rendered.slice(),
         destroyed: template._callbacks.destroyed.slice()
       };
     }
-    init(copy);
-    return constructView.call(copy, ...args);
+
+    return constructView.call(this, ...args);
   };
-  return template;
-}
 
-function instantiateComponent(CtorOrObject, componentName) {
-  let component;
+  componentTemplate.onCreated(function () {
+    // Trigger onComponentCreating(componentName, Ctor, templateInstance).
+    callbacks.$trigger('creating', componentName, Ctor, this);
 
-  if (typeof CtorOrObject === 'function') {
-    component = new CtorOrObject();
-  } else {
-    component = Object.create(CtorOrObject);
-  }
+    // Use the hookCreateComponent() if it exists.
+    let component = Component.hookCreateComponent ?
+      Component.hookCreateComponent(componentName, Ctor, this) : null;
 
-  component.name = componentName;
-  return component;
-}
+    // Otherwise we create the component in the default fashion.
+    if (!component) {
+      if (typeof Ctor === 'function') {
+        component = new Ctor();
+      } else {
+        component = Object.create(Ctor);
+      }
+    }
 
-function startsWithUpperCaseLetter(str) {
-  return str.charAt(0) === str.charAt(0).toUpperCase();
+    component.name = componentName;
+    component.templateInstance = this;
+
+    // Trigger onComponentCreating(componentName, Ctor, templateInstance).
+    callbacks.$trigger('initializing', component, this);
+
+    if (typeof component.initialize === 'function') component.initialize();
+
+    // Trigger onComponentCreating(componentName, Ctor, templateInstance).
+    callbacks.$trigger('initialized', component, this);
+
+    this.component = component;
+
+    // Setup the helpers. Helpers are easy to setup, we just need to
+    // register them the same way as usual.
+    if (typeof component.helpers === 'function') {
+      let helpers = component.helpers();
+      componentTemplate.helpers(ComponentUtil.bindTo(helpers, component));
+    }
+
+    // Setup the event listeners. Events are more tricky to setup, first
+    // we need to listen to the private onViewRendered() event and then
+    // need to ensure that only the events from the component are registered
+    // when the view has been rendered and only on the first render.
+    if (typeof component.events === 'function') {
+      let firstRender = true;
+      this.view._onViewRendered(() => {
+        if (!firstRender) return;
+        firstRender = false;
+
+        // Copy the component template and ensure the eventMaps array
+        // is empty. Then we get the component events, bind them to the component
+        // and map them to the view.
+        let scope = Object.create(componentTemplate);
+        scope.__eventMaps = [];
+        let events = this.component.events();
+        scope.events(ComponentUtil.bindTo(events, this.component));
+
+        for (let map of scope.__eventMaps) {
+          Blaze._addEventMap(this.view, map, this.view);
+        }
+      });
+    }
+
+    // Trigger onComponentCreated(componentName, component, templateInstance).
+    callbacks.$trigger('created', component, this);
+  });
+
+  componentTemplate.onRendered(function () {
+    callbacks.$trigger('readying', this.component, this);
+
+    // Call component#ready() if it exists.
+    if (typeof this.component.ready === 'function') {
+      this.component.ready();
+    }
+
+    callbacks.$trigger('readied', this.component, this);
+
+    // If the component has a rerender() method then we hook into
+    // the view's private onViewRendered() event.
+    if (typeof this.component.rerender === 'function') {
+      this.view._onViewRendered(() => {
+        if (this.component) this.component.rerender();
+      });
+    }
+  });
+
+  componentTemplate.onDestroyed(function () {
+    // Trigger onComponentDestroying(componentName, component, templateInstance).
+    callbacks.$trigger('destroying', this.component, this);
+
+    // Call component#destroy() if it exists.
+    if (typeof this.component.destroy === 'function') {
+      this.component.destroy();
+    }
+
+    // Trigger onComponentDestroyed(componentName, component, templateInstance).
+    callbacks.$trigger('destroyed', this.component, this);
+
+    this.component.templateInstance = null;
+    this.component = null;
+  });
+
+  // Trigger onComponentInstalled(componentName, Ctor, componentTemplate).
+  callbacks.$trigger('installed', componentName, Ctor, componentTemplate);
 }
 
 // Enumerate the defined component types. For each component
-// type we define it by calling Component() appropriately.
+// type we install it by calling Component() appropriately.
 Meteor.startup(function () {
   for (let componentName in Component) {
-    // All components are expected to have an upper camel case naming
-    // convention.
-    if (startsWithUpperCaseLetter(componentName)) {
+    // Skip over properties that start with 'on' or 'hook'.
+    if (!(ComponentUtil.startsWith(componentName, 'on') ||
+      ComponentUtil.startsWith(componentName, 'hook'))) {
+
       let Ctor = Component[componentName];
       Component(componentName, Ctor);
     }

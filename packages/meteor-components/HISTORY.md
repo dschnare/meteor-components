@@ -1,3 +1,34 @@
+# 0.4.0
+
+**Dec. 25, 2015**
+
+- Refactor startup logic so that components with any naming convention are
+  recognized not just components that use a upper camel case naming convention.
+
+- Refactor plugin system to include the following callbacks:
+  `onComponentInstalling/Installed`, `onComponentCreating/Created`,
+  `onComponentInitializing/Initialized`, `onComponentReadying/Readied`,
+  `onComponentDestroying/Destroyed`.
+
+- Add `hookCreateComponent()` to provide plugins the opportunity to override
+  how components are created. Only one plugin can provide this hook.
+
+- Rename component lifecycle methods; `onCreated` to `initialize`, `onRendered`
+  to `ready` and `onDestroyed` to `destroy`.
+
+- Refactor component lifecycle so that components are constructed when the
+  template is first created so that the construction *is* the `onCreated`
+  handler. Optionally support `initialize` to allow separating dependency
+  setup from state initialization. These changes were made so that plugins
+  can take full control over component construction and dependency management.
+
+- Refactor hierarchy plugin to support arbitrary view hierarchies so that
+  parent-child relationships won't be broken when a new view is inserted
+  say from a new list item.
+
+- Break out utilitarian functions into their own namespace `ComponentUtil`.
+
+
 # 0.3.1
 
 **Dec. 15, 2015**

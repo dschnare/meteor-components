@@ -1,4 +1,4 @@
-Component.getRefs = function (tplInstance, refs = null) {
+ComponentUtil.getRefs = function (tplInstance, refs = null) {
   refs = refs || {};
   tplInstance.findAll('[data-ref], [ref]').forEach(function (el) {
     refs[el.getAttribute('data-ref') || el.getAttribtue('ref')] = el;
@@ -6,16 +6,14 @@ Component.getRefs = function (tplInstance, refs = null) {
   return refs;
 };
 
-Component.onComponentInitialize(function (component, template) {
+Component.onComponentInitializing(function (component) {
   component.refs = {};
-
-  template.onRendered(function () {
-    Component.getRefs(this, component.refs);
-  });
 });
 
-Component.onComponentInitialized(function (component, template) {
-  template.onDestroyed(function () {
-    component.refs = {};
-  });
+Component.onComponentReadying(function (component, templateInstance) {
+  ComponentUtil.getRefs(templateInstance, component.refs);
+});
+
+Component.onComponentDestroyed(function (component) {
+  component.refs = {};
 });

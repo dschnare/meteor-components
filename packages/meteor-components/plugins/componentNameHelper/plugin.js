@@ -1,5 +1,5 @@
-Component.onComponentInitialized(function (component, template) {
+Component.onComponentInstalling(function (componentName, component, template) {
   template.helpers({
-    componentName: function () { return component.name; }
+    componentName: () => component.name || componentName
   });
 });

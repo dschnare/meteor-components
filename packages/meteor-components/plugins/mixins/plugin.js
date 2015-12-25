@@ -1,5 +1,5 @@
 /*global Component, getFirstWith, callFirstWith, instantiateMixin*/
-Component.onComponentInitialize(function (component, template) {
+Component.onComponentInitializing(function (component, template) {
   component.callFristWith = callFirstWith;
   component.getFirstWith = getFirstWith;
 
@@ -8,8 +8,19 @@ Component.onComponentInitialize(function (component, template) {
     let mixins = component.mixins();
 
     mixins.forEach(function (Mixin) {
-      let mixin = instantiateMixin(Mixin, component);
-      if (typeof mixin.init === 'function') mixin.init();
+      let mixin;
+
+      if (typeof Mixin === 'function') {
+        mixin = new Mixin();
+      } else {
+        mixin = Object.create(Mixin);
+      }
+
+      mixin.owner = component;
+      mixin.callFristWith = callFirstWith;
+      mixin.getFirstWith = getFirstWith;
+
+      if (typeof mixin.initialize === 'function') mixin.initialize();
 
       if (typeof mixin.events === 'function') {
         template.events(Component.bindTo(mixin.events() || {}, mixin));
@@ -21,26 +32,28 @@ Component.onComponentInitialize(function (component, template) {
 
       mixinInstances.push(mixin);
     });
+  }
+});
 
-    template.onCreated(function () {
-      mixins.forEach(function (mixin) {
-        if (mixin.onCreated) mixin.onCreated();
-      });
-    });
-
-    template.onRendered(function () {
-      mixins.forEach(function (mixin) {
-        if (mixin.onRendered) mixin.onRendered();
-      });
-    });
-
-    template.onDestroyed(function () {
-      let mixinInstances = component._mixinInstances;
-      while (mixinInstances.length) {
-        let mixin = mixinInstances.pop();
-        if (mixin.onDestroyed) mixin.onDestroyed();
-        mixin.owner = null;
+Component.onComponentReadying(function (component) {
+  if (component._mixinInstances) {
+    for (let mixin of component._mixinInstances) {
+      if (typeof mixin.ready === 'function') {
+        mixin.ready();
       }
-    });
+    }
+  }
+});
+
+Component.onComponentDestroying(function (component) {
+  if (component._mixinInstances) {
+    let mixins = component._mixinInstances;
+    while (mixins.length) {
+      let mixin = mixins.pop();
+      if (typeof mixin.destroy === 'function') {
+        mixin.destroy();
+      }
+      mixin.owner = null;
+    }
   }
 });

@@ -1,5 +1,5 @@
 /*global Component*/
-Component.onComponentInitialize(function (component, template) {
+Component.onComponentInitializing(function (component) {
   component._timeouts = [];
   component.setTimeout = function (fn, duration) {
     let id = setTimeout(fn, duration);
@@ -31,9 +31,9 @@ Component.onComponentInitialize(function (component, template) {
       clearInterval(this._intervals.pop());
     }
   };
+});
 
-  template.onDestroyed(function () {
-    component.clearTimeouts();
-    component.clearIntervals();
-  });
-});;
+Component.onComponentDestroying(function (component) {
+  component.clearTimeouts();
+  component.clearIntervals();
+});
