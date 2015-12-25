@@ -3,6 +3,7 @@
 Meteor Components is a simple, lightweight component
 extension for Meteor templates.
 
+
 ## Quickstart
 
     <template name="index">
@@ -32,40 +33,8 @@ extension for Meteor templates.
       }
     };
 
-## Why
 
-Why implement a package like this when Blaze Components
-exists that already does something similar?
+## Reference
 
-- Blaze Components does too many things for a single
-  package. Blaze Components introduces "namespaced"
-  templates in addition to the component framework.
-
-- Creating a Blaze Component doesn't feel like the Meteor
-  way. Meteor Components tries to follow established
-  Meteor idioms so if you know templates, you know
-  components.
-
-- Blaze Components overrides low-level, private methods
-  deep in the Blaze templating layer. This exposes your
-  code to a high degree of lock-in since a change in Meteor
-  has a high likelihood of impacting Blaze Components so
-  you won't be able to update Blaze Components without
-  the risk of having conflicts with your version of Meteor.
-
-- Blaze Components lacks a robust child-parent linking
-  mechanism that detects child-parent relationships
-  outside a template definition. Meteor Components resovles
-  child-parent relationships when the components are first
-  created so the child-parent relationships are always
-  available to you.
-
-## Thank You
-
-I'd like to thank the Blaze Components authors for providing
-a great framework and paving the way. Without Blaze Components
-as an example, Meteor Components would not be the way it is today.
-
-But if you're looking for a similar Blaze Components framework
-with a smaller footprint and doesn't inject istself deep into
-the Blaze API then try Meteor Components.
+Reference documentation comming soon! In the mean time take a look at the
+[GitHub](https://github.com/dschnare/meteor-components) repo.
