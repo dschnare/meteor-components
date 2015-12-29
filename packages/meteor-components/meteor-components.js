@@ -59,8 +59,12 @@ Component.onComponentDestroyed = function (callback) {
   callbacks.destroyed.push(callback);
 };
 
+Component.trigger = callbacks.$trigger.bind(callbacks);
+
 // function (componentName, Ctor, templateInstance): component
 Component.hookCreateComponent = null;
+// function (component, templateInstance)
+Component.hookDestroyComponent = null;
 
 function installComponent(componentName, Ctor) {
   let templateName = typeof Ctor.template === 'function' ?
@@ -121,26 +125,35 @@ function installComponent(componentName, Ctor) {
     // Trigger onComponentCreating(componentName, Ctor, templateInstance).
     callbacks.$trigger('creating', componentName, Ctor, this);
 
+
+    let component = null;
+
     // Use the hookCreateComponent() if it exists.
-    let component = Component.hookCreateComponent ?
-      Component.hookCreateComponent(componentName, Ctor, this) : null;
+    if (Component.hookCreateComponent) {
+      component = Component.hookCreateComponent(componentName, Ctor, this);
 
     // Otherwise we create the component in the default fashion.
-    if (!component) {
+    } else {
       if (typeof Ctor === 'function') {
         component = new Ctor();
       } else {
         component = Object.create(Ctor);
       }
+
+      if (component) {
+        component.name = componentName;
+        component.templateInstance = this;
+
+        // Trigger onComponentCreating(componentName, Ctor, templateInstance).
+        callbacks.$trigger('initializing', component, this);
+
+        if (typeof component.initialize === 'function') component.initialize();
+      }
     }
 
-    component.name = componentName;
-    component.templateInstance = this;
-
-    // Trigger onComponentCreating(componentName, Ctor, templateInstance).
-    callbacks.$trigger('initializing', component, this);
-
-    if (typeof component.initialize === 'function') component.initialize();
+    if (!component) {
+      throw new Error(`Failed to create component ${componentName}`);
+    }
 
     // Trigger onComponentCreating(componentName, Ctor, templateInstance).
     callbacks.$trigger('initialized', component, this);
@@ -205,9 +218,13 @@ function installComponent(componentName, Ctor) {
     // Trigger onComponentDestroying(componentName, component, templateInstance).
     callbacks.$trigger('destroying', this.component, this);
 
-    // Call component#destroy() if it exists.
-    if (typeof this.component.destroy === 'function') {
-      this.component.destroy();
+    if (Component.hookDestroyComponent) {
+      Component.hookDestroyComponent(this.component, this);
+    } else {
+      // Call component#destroy() if it exists.
+      if (typeof this.component.destroy === 'function') {
+        this.component.destroy();
+      }
     }
 
     // Trigger onComponentDestroyed(componentName, component, templateInstance).
@@ -225,9 +242,10 @@ function installComponent(componentName, Ctor) {
 // type we install it by calling Component() appropriately.
 Meteor.startup(function () {
   for (let componentName in Component) {
-    // Skip over properties that start with 'on' or 'hook'.
+    // Skip over properties that start with 'on', 'hook' or 'trigger'.
     if (!(ComponentUtil.startsWith(componentName, 'on') ||
-      ComponentUtil.startsWith(componentName, 'hook'))) {
+      ComponentUtil.startsWith(componentName, 'hook') ||
+      ComponentUtil.startsWith(componentName, 'trigger'))) {
 
       let Ctor = Component[componentName];
       Component(componentName, Ctor);

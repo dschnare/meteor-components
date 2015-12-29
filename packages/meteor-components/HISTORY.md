@@ -1,3 +1,20 @@
+# 0.5.0
+
+**Dec. 29, 2015**
+
+- Add `hookDestroyComponent` to provide a hook to destroy a component.
+  This hook is responsible for destroying a component and must call
+  the component's `destroy` method.
+
+- Change `hookCreateComponent` so that it is now responsible for triggering
+  `onComponentInitializing` and calling the component's `initialize` method.
+  This hook is also responsible for setting the `name` and `templateInstance`
+  properties on the component before the component's `initialize` method is
+  called.
+
+- Add `trigger` method to `Component`.
+
+
 # 0.4.0
 
 **Dec. 25, 2015**
