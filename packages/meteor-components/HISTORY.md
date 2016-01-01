@@ -1,3 +1,12 @@
+# 0.5.1
+
+**Jan. 1, 2016**
+
+- Fix issue with component temlpate being re-used for each instance of
+  the component. This is a problem because each component has their own
+  helpers and events that when registered modify the template.
+
+
 # 0.5.0
 
 **Dec. 29, 2015**
