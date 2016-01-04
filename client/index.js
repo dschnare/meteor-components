@@ -16,10 +16,10 @@ Component.Gravatar = {
     return {
       gravatarUrl: function () {
         // 'this' is the component instance.
-        // On the component instance there will be a
-        // 'templateInstance' property that has a
-        // reference to the Blaze.TemplateInstance.
-        var email = this.data().email;
+        // this.data() is a method call to retrieve
+        // templateInstance.data, but if you specify a key path
+        // the key path access will be reactive.
+        var email = this.data('email');
         if (email) {
           email = email.replace(/^\s|\s$/g, '');
           var hash = CryptoJS.MD5(email);
@@ -60,16 +60,20 @@ Component.Gravatar = {
   }
 };
 
-Component.Shell = class {
-  initialize() {
-    console.log('Shell#initialize');
-  }
+Component.Shell = {
+  create() {
+    return {
+      initialize() {
+        console.log('Shell#initialize');
+      },
 
-  ready() {
-    console.log('Shell#ready');
-  }
+      ready() {
+        console.log('Shell#ready');
+      },
 
-  destroy() {
-    console.log('Shell#destroy');
+      destroy() {
+        console.log('Shell#destroy');
+      }
+    };
   }
-}
+};

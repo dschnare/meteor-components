@@ -1,10 +1,10 @@
 # Meteor Components
 
-Meteor Components is a simple, lightweight component
-extension for Meteor templates.
+Meteor Components is a simple, lightweight component extension for Meteor
+templates.
 
 
-## Quickstart
+## Quick Start
 
     <template name="index">
       {{>Gravatar email="myemail@email.com"}}
@@ -16,13 +16,14 @@ extension for Meteor templates.
 
     // Show Gravatar avatar image.
     // See: https://secure.gravatar.com/site/implement/hash/
-    // For a more in-depth look at the component API
-    // see https://github.com/dschnare/meteor-components/blob/master/client/index.js.
     Component.Gravatar = {
       helpers: function () {
         return {
           gravatarUrl: function () {
-            var email = this.data().email;
+            // this.data() is a method call to retrieve
+            // templateInstance.data, but if you specify a key path
+            // the key path access will be reactive.
+            var email = this.data('email');
             if (email) {
               email = email.replace(/^\s|\s$/g, '');
               var hash = CryptoJS.MD5(email);

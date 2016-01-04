@@ -1,3 +1,20 @@
+# 0.6.0
+
+**Jan. 4, 2016**
+
+- Override the `data()` method to accept a key path. When calling this method
+  with a key path the request the request is reactive.
+
+- Add a `data(path)` helper to all components automatically that provides a
+  convenient helper to retrieve keys from the data context in a reactive
+  fashion. This allows individual data context paths to be reactive instead of
+  the entire data context.
+
+- Add support for creating a component via factory function by looking for a
+  static `create()` method on the object defining the component.
+
+
+
 # 0.5.1
 
 **Jan. 1, 2016**

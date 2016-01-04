@@ -1,7 +1,7 @@
 /*global Package*/
 Package.describe({
   name: 'dschnare:meteor-components',
-  version: '0.5.1',
+  version: '0.6.0',
   // Brief, one-line summary of the package.
   summary: 'Simple, lightweight component extension for Meteor templates.',
   // URL to the Git repository containing the source code for this package.
@@ -13,8 +13,10 @@ Package.describe({
 
 Package.onUse(function(api) {
   api.versionsFrom('1.2.1');
-  api.use('ecmascript');
-  api.use('templating');
+  api.use('ecmascript', 'client');
+  api.use('templating', 'client');
+  api.use('xamfoo:reactive-obj@0.5.0', 'client');
+  api.use('ejson', 'client');
 
   api.addFiles([
     // polyfills

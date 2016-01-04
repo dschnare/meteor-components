@@ -127,6 +127,8 @@ function installComponent(componentName, Ctor) {
       } else {
         if (typeof Ctor === 'function') {
           component = new Ctor();
+        } else if (typeof Ctor.create === 'function') {
+          component = Ctor.create();
         } else {
           component = Object.create(Ctor);
         }
