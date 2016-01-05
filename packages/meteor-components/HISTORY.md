@@ -1,3 +1,17 @@
+# 0.6.1
+
+**Jan. 4, 2016**
+
+- Add support for `rerendering` and `rerendered` callbacks phases by
+  implementing `onComponentRerendering()` and `onComponentRerendered()`.
+
+- Move component creation into default implementation of
+  `hookCreateComponent()`.
+
+- Move component destruction into default implementation of
+  `hookDestroyComponent()`.
+
+
 # 0.6.0
 
 **Jan. 4, 2016**

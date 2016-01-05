@@ -8,6 +8,8 @@ let callbacks = {
   initialized: [],
   readying: [],
   readied: [],
+  rerendering: [],
+  rerendered: [],
   destroying: [],
   destroyed: [],
   $trigger(eventType, ...args) {
@@ -51,6 +53,14 @@ Component.onComponentReadied = function (callback) {
   callbacks.readied.push(callback);
 };
 
+Component.onComponentRerendering = function (callback) {
+  callbacks.rerendering.push(callback);
+};
+
+Component.onComponentRerendered = function (callback) {
+  callbacks.rerendered.push(callback);
+};
+
 Component.onComponentDestroying = function (callback) {
   callbacks.destroying.push(callback);
 };
@@ -61,10 +71,37 @@ Component.onComponentDestroyed = function (callback) {
 
 Component.trigger = callbacks.$trigger.bind(callbacks);
 
-// function (componentName, Ctor, templateInstance): component
-Component.hookCreateComponent = null;
+Component.hookCreateComponent = function (componentName, Ctor, templateInstance) {
+  let component = null;
+
+  if (typeof Ctor === 'function') {
+    component = new Ctor();
+  } else if (typeof Ctor.create === 'function') {
+    component = Ctor.create();
+  } else {
+    component = Object.create(Ctor);
+  }
+
+  if (component) {
+    component.name = componentName;
+    component.templateInstance = templateInstance;
+
+    // Trigger onComponentCreating(componentName, Ctor, templateInstance).
+    callbacks.$trigger('initializing', component, templateInstance);
+
+    if (typeof component.initialize === 'function') component.initialize();
+  }
+
+  return component;
+};
+
 // function (component, templateInstance)
-Component.hookDestroyComponent = null;
+Component.hookDestroyComponent = function (component, templateInstance) {
+  // Call component#destroy() if it exists.
+  if (typeof component.destroy === 'function') {
+    component.destroy();
+  }
+};
 
 function installComponent(componentName, Ctor) {
   let templateName = typeof Ctor.template === 'function' ?
@@ -120,28 +157,10 @@ function installComponent(componentName, Ctor) {
       let component = null;
 
       // Use the hookCreateComponent() if it exists.
-      if (Component.hookCreateComponent) {
+      if (typeof Component.hookCreateComponent === 'function') {
         component = Component.hookCreateComponent(componentName, Ctor, this);
-
-      // Otherwise we create the component in the default fashion.
       } else {
-        if (typeof Ctor === 'function') {
-          component = new Ctor();
-        } else if (typeof Ctor.create === 'function') {
-          component = Ctor.create();
-        } else {
-          component = Object.create(Ctor);
-        }
-
-        if (component) {
-          component.name = componentName;
-          component.templateInstance = this;
-
-          // Trigger onComponentCreating(componentName, Ctor, templateInstance).
-          callbacks.$trigger('initializing', component, this);
-
-          if (typeof component.initialize === 'function') component.initialize();
-        }
+        throw new Error('Component.hookCreateComponent must be a function.');
       }
 
       if (!component) {
@@ -203,13 +222,10 @@ function installComponent(componentName, Ctor) {
       // Trigger onComponentDestroying(componentName, component, templateInstance).
       callbacks.$trigger('destroying', this.component, this);
 
-      if (Component.hookDestroyComponent) {
+      if (typeof Component.hookDestroyComponent === 'function') {
         Component.hookDestroyComponent(this.component, this);
       } else {
-        // Call component#destroy() if it exists.
-        if (typeof this.component.destroy === 'function') {
-          this.component.destroy();
-        }
+        throw new Error('Component.hookDestroyComponent must be a function.');
       }
 
       // Trigger onComponentDestroyed(componentName, component, templateInstance).
@@ -231,10 +247,22 @@ function installComponent(componentName, Ctor) {
         return;
       }
 
-      if (view._templateInstance && view._templateInstance.component &&
+      callbacks.$trigger(
+        'rerendering',
+        view._templateInstance.component,
+        view._templateInstance
+      );
+
+      if (view._templateInstance.component &&
         typeof view._templateInstance.component.rerender === 'function') {
         view._templateInstance.component.rerender();
       }
+
+      callbacks.$trigger(
+        'rerendered',
+        view._templateInstance.component,
+        view._templateInstance
+      );
     });
 
     return view;
