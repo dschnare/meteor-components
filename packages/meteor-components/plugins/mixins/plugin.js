@@ -12,6 +12,8 @@ Component.onComponentInitializing(function (component, template) {
 
       if (typeof Mixin === 'function') {
         mixin = new Mixin();
+      } else if (typeof Mixin.create === 'function') {
+        mixin = Mixin.create();
       } else {
         mixin = Object.create(Mixin);
       }
@@ -40,6 +42,16 @@ Component.onComponentReadying(function (component) {
     for (let mixin of component._mixinInstances) {
       if (typeof mixin.ready === 'function') {
         mixin.ready();
+      }
+    }
+  }
+});
+
+Component.onComponentRerendering(function (component) {
+  if (component._mixinInstances) {
+    for (let mixin of component._mixinInstances) {
+      if (typeof mixin.rerender === 'function') {
+        mixin.rerender();
       }
     }
   }

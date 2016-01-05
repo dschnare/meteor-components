@@ -1,3 +1,14 @@
+# 0.6.3
+
+**Jan. 4, 2016**
+
+- Add support for mixins to have a static `create()` method for mixin
+  factorized mixin creation.
+
+- Hook into `rerendering` callback phase to call `rerender()` method on mixin
+  instances.
+
+
 # 0.6.2
 
 **Jan. 4, 2016**
