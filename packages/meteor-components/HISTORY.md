@@ -1,3 +1,10 @@
+# 0.6.4
+
+**Jan. 4, 2016**
+
+- Write reference documentation.
+
+
 # 0.6.3
 
 **Jan. 4, 2016**
