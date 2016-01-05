@@ -14,6 +14,10 @@ Component.onComponentReadying(function (component, templateInstance) {
   ComponentUtil.getRefs(templateInstance, component.refs);
 });
 
+Component.onComponentRerendering(function (component, templateInstance) {
+  ComponentUtil.getRefs(templateInstance, component.refs);
+});
+
 Component.onComponentDestroyed(function (component) {
   component.refs = {};
 });

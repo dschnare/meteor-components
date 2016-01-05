@@ -1,3 +1,12 @@
+# 0.6.2
+
+**Jan. 4, 2016**
+
+- Hook into `rerendering` callback phase to reset the referenced DOM nodes
+  set on `refs`.
+
+
+
 # 0.6.1
 
 **Jan. 4, 2016**
