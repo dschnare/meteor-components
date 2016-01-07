@@ -7,15 +7,13 @@ Component.on('initializing', function (component, template) {
     let mixinInstances = component._mixinInstances = [];
     let mixins = component.mixins();
 
-    mixins.forEach(function (Mixin) {
+    mixins.forEach(function (m) {
       let mixin;
 
-      if (typeof Mixin === 'function') {
-        mixin = new Mixin();
-      } else if (typeof Mixin.create === 'function') {
-        mixin = Mixin.create();
+      if (typeof m === 'function') {
+        mixin = m();
       } else {
-        mixin = Object.create(Mixin);
+        mixin = Object.create(m);
       }
 
       mixin.owner = component;

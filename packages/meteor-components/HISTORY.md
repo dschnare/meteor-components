@@ -1,3 +1,48 @@
+# 0.9.0
+
+**Jan. 7, 2016**
+
+refactor(mixin definition) Refactor mixin definition style support
+
+The supported mixin definition styles were refactored so that it is more
+unified and consistent with component definition styles.
+
+BREAKING CHANGE: Mixins no longer support `{create() {}}` factory style
+mixins. Only factory functions and objects are supported.
+
+Before
+
+    Component.MyComponent = class {
+      mixins() {
+        return [
+          {},
+          MyMixinConstructor,
+          {
+            create() {
+              return {};
+            }
+          }
+        ]
+      }
+    }
+
+After
+
+    Component.MyComponent = class {
+      mixins() {
+        return [
+          {},
+          function () {
+            return new MyMixinConstructor();
+          },
+          function {
+            return {};
+          }
+        ]
+      }
+    }
+
+
 # 0.8.0
 
 **Jan. 7, 2016**

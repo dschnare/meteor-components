@@ -230,7 +230,7 @@ Meteor.startup(function () {
         let Ctor = def;
         let factory = function (...args) {
           if (this instanceof Ctor) {
-            Ctor.apply(this, args);
+            return Ctor.apply(this, args);
           } else {
             switch (args.length) {
               case 0:

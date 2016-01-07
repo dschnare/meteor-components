@@ -139,6 +139,32 @@ sensical fashion based on the new component defintion style.
       })
     })
 
+**Constructor mascarade**
+
+As a convenience when components are defined as a constructor/class the
+constructor-like behaviour is mascaraded onto the factor function so that
+the factory function can be extended like a constructor/class (as seen above),
+and also accept arguments that will be passed to the constructor.
+
+By default the component system will not pass any arguments to the factory
+functions, but this feature may make it easier to pass in dependencies to
+base components (i.e. components meant to be extended) or by a plugin that
+overrides `Component.hookCreateComponent()`.
+
+**Example:**
+
+    Component.SomeComponent = class {
+      constructor(a) {
+        if (a) {
+          /* do something special with a */
+        }
+      }
+    }
+
+    Component.SubComponent = class extends Component.SomeComponent {
+      super({ name: 'this is a' });
+    }
+
 **Getting access to the original definition**
 
 Sometimes it's beneficial to know how a component was defined. To find
