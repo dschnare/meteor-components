@@ -1,4 +1,4 @@
-Component.onComponentInstalling(function (componentName, component, template) {
+Component.on('installing', function (componentName, component, template) {
   template.helpers({
     componentName: () => component.name || componentName
   });

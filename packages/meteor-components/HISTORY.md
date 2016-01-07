@@ -1,3 +1,31 @@
+# 0.7.0
+
+**Jan. 7, 2016**
+
+refactor(plugin events) Replace all 'onComponentX' methods with 'on()'
+
+Refactor all 'onComoponnetX()' so that only a single 'on()' method is used to
+register event listeners. The event names are the following.
+
+- installing/installed
+- creating/created
+- initializing/initialized
+- readying/readied
+- rerendering/rerendered
+- destroying/destroyed
+
+BRAEKING CHANGE: Plugins can no longer use 'onComponentX()' to register
+callbacks. As a workaround use 'on(eventType, listener)'.
+
+Before
+
+    Component.onComponentInstalling(callback)
+
+After
+
+    Component.on('installing', callback)
+
+
 # 0.6.4
 
 **Jan. 4, 2016**

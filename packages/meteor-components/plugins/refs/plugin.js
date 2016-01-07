@@ -6,18 +6,18 @@ ComponentUtil.getRefs = function (tplInstance, refs = null) {
   return refs;
 };
 
-Component.onComponentInitializing(function (component) {
+Component.on('initializing', function (component) {
   component.refs = {};
 });
 
-Component.onComponentReadying(function (component, templateInstance) {
+Component.on('readying', function (component, templateInstance) {
   ComponentUtil.getRefs(templateInstance, component.refs);
 });
 
-Component.onComponentRerendering(function (component, templateInstance) {
+Component.on('rerendering', function (component, templateInstance) {
   ComponentUtil.getRefs(templateInstance, component.refs);
 });
 
-Component.onComponentDestroyed(function (component) {
+Component.on('destroyed', function (component) {
   component.refs = {};
 });

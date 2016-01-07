@@ -1,5 +1,5 @@
 /*global Component*/
-Component.onComponentInitializing(function (component, templateInstance) {
+Component.on('initializing', function (component, templateInstance) {
   component.parent = getNearestComponent(templateInstance.view);
   component.children = [];
   templateInstance.view.component = component;
@@ -9,7 +9,7 @@ Component.onComponentInitializing(function (component, templateInstance) {
   }
 });
 
-Component.onComponentDestroyed(function (component, templateInstance) {
+Component.on('destroyed', function (component, templateInstance) {
   component.parent = null;
   component.children = [];
   templateInstance.view.component = null;

@@ -697,19 +697,19 @@ Retrives the name of the component.
 # Plugin API
 
 The plugin API allows plugin authors to modify components during specific
-phases. Each phase can have callbacks registered before (ending in `'ing'`) and
+phases. Each phase can have listeners registered before (ending in `'ing'`) and
 after (ending in `'ed'`) the phase has taken place. The following phases are
 supported.
 
-- `onComponentInstalling/Installed`
-- `onComponentCreating/Created`
+- `installing/installed`
+- `creating/created`
 
 **Post component creation**
 
-- `onComponentInitialzing/Initialized`
-- `onComponentReadying/Readied`
-- `onComponentRerendering/Rerendered`
-- `onComponentDestroying/Destroyed`
+- `initialzing/initialized`
+- `readying/readied`
+- `rerendering/rerendered`
+- `destroying/destroyed`
 
 Each phase that occurs before or during component creation has the following
 arguments passed in.
@@ -720,7 +720,7 @@ arguments passed in.
 
 **Example:**
 
-    Component.onComponentInstalling(function (componentName, Ctor, template) {
+    Component.on('installing', function (componentName, Ctor, template) {
       console.log('installing component:', componentName);
     });
 
@@ -732,7 +732,7 @@ arguments passed in.
 
 **Example:**
 
-    Component.onComponentInitializing(function (component, templateInstance) {
+    Component.on('initializing', function (component, templateInstance) {
       console.log('initializing component:', component.name);
       component.myProp = 'some value';
     });

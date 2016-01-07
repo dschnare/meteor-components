@@ -1,5 +1,5 @@
 /*global Component, Template, ReactiveObj, EJSON*/
-Component.onComponentInitializing(function (component, templateInstance) {
+Component.on('initializing', function (component, templateInstance) {
   // Provide convenience methods that mirrors the
   // template instance API.
   component.findAll = function (selector) {

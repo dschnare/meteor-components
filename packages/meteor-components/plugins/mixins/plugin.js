@@ -1,5 +1,5 @@
 /*global Component, getFirstWith, callFirstWith, instantiateMixin*/
-Component.onComponentInitializing(function (component, template) {
+Component.on('initializing', function (component, template) {
   component.callFristWith = callFirstWith;
   component.getFirstWith = getFirstWith;
 
@@ -37,7 +37,7 @@ Component.onComponentInitializing(function (component, template) {
   }
 });
 
-Component.onComponentReadying(function (component) {
+Component.on('readying', function (component) {
   if (component._mixinInstances) {
     for (let mixin of component._mixinInstances) {
       if (typeof mixin.ready === 'function') {
@@ -47,7 +47,7 @@ Component.onComponentReadying(function (component) {
   }
 });
 
-Component.onComponentRerendering(function (component) {
+Component.on('rerendering', function (component) {
   if (component._mixinInstances) {
     for (let mixin of component._mixinInstances) {
       if (typeof mixin.rerender === 'function') {
@@ -57,7 +57,7 @@ Component.onComponentRerendering(function (component) {
   }
 });
 
-Component.onComponentDestroying(function (component) {
+Component.on('destroying', function (component) {
   if (component._mixinInstances) {
     let mixins = component._mixinInstances;
     while (mixins.length) {

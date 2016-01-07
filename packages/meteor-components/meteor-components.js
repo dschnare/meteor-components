@@ -1,75 +1,35 @@
 /*global Component, ComponentUtil, Template, Blaze, Meteor*/
-let callbacks = {
-  installing: [],
-  installed: [],
-  creating: [],
-  created: [],
-  initializing: [],
-  initialized: [],
-  readying: [],
-  readied: [],
-  rerendering: [],
-  rerendered: [],
-  destroying: [],
-  destroyed: [],
-  $trigger(eventType, ...args) {
-    for (let callback of this[eventType]) callback(...args);
-  }
-};
+let callbacks = {};
 
 Component = function (componentName, Ctor) {
   installComponent(componentName, Ctor);
 };
 
-Component.onComponentInstalling = function (callback) {
-  callbacks.installing.push(callback);
+Component.on = function (eventName, listener) {
+  let listening = true;
+  let listeners = callbacks[eventName];
+  if (!listeners) listeners = callbacks[eventName] = [];
+
+  listeners.push(listener);
+
+  return {
+    off() {
+      if (listening) {
+        listening = false;
+        listeners.splice(listeners.indexOf(listener), 1);
+      }
+    }
+  };
 };
 
-Component.onComponentInstalled = function (callback) {
-  callbacks.installed.push(callback);
+Component.trigger = function (eventName, ...args) {
+  let listeners = callbacks[eventName];
+  if (listeners) {
+    for (let listener of listeners) {
+      listener(...args);
+    }
+  }
 };
-
-Component.onComponentCreating = function (callback) {
-  callbacks.creating.push(callback);
-};
-
-Component.onComponentCreated = function (callback) {
-  callbacks.created.push(callback);
-};
-
-Component.onComponentInitializing = function (callback) {
-  callbacks.initializing.push(callback);
-};
-
-Component.onComponentInitialized = function (callback) {
-  callbacks.initialized.push(callback);
-};
-
-Component.onComponentReadying = function (callback) {
-  callbacks.readying.push(callback);
-};
-
-Component.onComponentReadied = function (callback) {
-  callbacks.readied.push(callback);
-};
-
-Component.onComponentRerendering = function (callback) {
-  callbacks.rerendering.push(callback);
-};
-
-Component.onComponentRerendered = function (callback) {
-  callbacks.rerendered.push(callback);
-};
-
-Component.onComponentDestroying = function (callback) {
-  callbacks.destroying.push(callback);
-};
-
-Component.onComponentDestroyed = function (callback) {
-  callbacks.destroyed.push(callback);
-};
-
-Component.trigger = callbacks.$trigger.bind(callbacks);
 
 Component.hookCreateComponent = function (componentName, Ctor, templateInstance) {
   let component = null;
@@ -86,8 +46,7 @@ Component.hookCreateComponent = function (componentName, Ctor, templateInstance)
     component.name = componentName;
     component.templateInstance = templateInstance;
 
-    // Trigger onComponentCreating(componentName, Ctor, templateInstance).
-    callbacks.$trigger('initializing', component, templateInstance);
+    Component.trigger('initializing', component, templateInstance);
 
     if (typeof component.initialize === 'function') component.initialize();
   }
@@ -123,8 +82,7 @@ function installComponent(componentName, Ctor) {
   template.$component = true;
   Template[componentName] = template;
 
-  // Trigger onComponentInstalling(componentName, Ctor, template).
-  callbacks.$trigger('installing', componentName, Ctor, template);
+  Component.trigger('installing', componentName, Ctor, template);
 
   // We depend on a very small set of Blaze APIs to get the job done.
   // We override the constructView() method so that we can copy the
@@ -151,8 +109,7 @@ function installComponent(componentName, Ctor) {
     }
 
     componentTemplate.onCreated(function () {
-      // Trigger onComponentCreating(componentName, Ctor, templateInstance).
-      callbacks.$trigger('creating', componentName, Ctor, this);
+      Component.trigger('creating', componentName, Ctor, this);
 
       let component = null;
 
@@ -167,8 +124,7 @@ function installComponent(componentName, Ctor) {
         throw new Error(`Failed to create component ${componentName}`);
       }
 
-      // Trigger onComponentCreating(componentName, Ctor, templateInstance).
-      callbacks.$trigger('initialized', component, this);
+      Component.trigger('initialized', component, this);
 
       this.component = component;
 
@@ -203,24 +159,22 @@ function installComponent(componentName, Ctor) {
         });
       }
 
-      // Trigger onComponentCreated(componentName, component, templateInstance).
-      callbacks.$trigger('created', component, this);
+      Component.trigger('created', component, this);
     });
 
     componentTemplate.onRendered(function () {
-      callbacks.$trigger('readying', this.component, this);
+      Component.trigger('readying', this.component, this);
 
       // Call component#ready() if it exists.
       if (typeof this.component.ready === 'function') {
         this.component.ready();
       }
 
-      callbacks.$trigger('readied', this.component, this);
+      Component.trigger('readied', this.component, this);
     });
 
     componentTemplate.onDestroyed(function () {
-      // Trigger onComponentDestroying(componentName, component, templateInstance).
-      callbacks.$trigger('destroying', this.component, this);
+      Component.trigger('destroying', this.component, this);
 
       if (typeof Component.hookDestroyComponent === 'function') {
         Component.hookDestroyComponent(this.component, this);
@@ -228,8 +182,7 @@ function installComponent(componentName, Ctor) {
         throw new Error('Component.hookDestroyComponent must be a function.');
       }
 
-      // Trigger onComponentDestroyed(componentName, component, templateInstance).
-      callbacks.$trigger('destroyed', this.component, this);
+      Component.trigger('destroyed', this.component, this);
 
       this.component.templateInstance = null;
       this.component = null;
@@ -247,7 +200,7 @@ function installComponent(componentName, Ctor) {
         return;
       }
 
-      callbacks.$trigger(
+      Component.trigger(
         'rerendering',
         view._templateInstance.component,
         view._templateInstance
@@ -258,7 +211,7 @@ function installComponent(componentName, Ctor) {
         view._templateInstance.component.rerender();
       }
 
-      callbacks.$trigger(
+      Component.trigger(
         'rerendered',
         view._templateInstance.component,
         view._templateInstance
@@ -268,8 +221,7 @@ function installComponent(componentName, Ctor) {
     return view;
   };
 
-  // Trigger onComponentInstalled(componentName, Ctor, template).
-  callbacks.$trigger('installed', componentName, Ctor, template);
+  Component.trigger('installed', componentName, Ctor, template);
 }
 
 // Enumerate the defined component types. For each component
