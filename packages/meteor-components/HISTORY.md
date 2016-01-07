@@ -1,3 +1,34 @@
+# 0.8.0
+
+**Jan. 7, 2016**
+
+refactor(component install) Refactor how components are installed
+
+Refactor compnent installation to support cleaner factory definition support
+and to unify the installation process. Compnents can now be defined as a
+factory by calling 'Component(componentName, factory, [templateName])'. This
+API is now the preferred way to define a component and is in fact used to
+install components defined off of 'Component.MyComponent'.
+
+BREAKING CHANGE: All pre-creation plugin events will now be passed the factory
+function installed for the component instead of the actual constructor or
+object definition.
+
+Before
+
+    Component.on('installing', function (componentName, CtorOrObj, template) {
+
+    })
+
+After
+
+    Component.on('installing', function (componentName, factory, template) {
+      let CtorOrObj = factory.$definition;
+      // CtorOrObj could be undefined
+    })
+
+
+
 # 0.7.0
 
 **Jan. 7, 2016**

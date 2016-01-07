@@ -1,8 +1,8 @@
 /*global Component, ComponentUtil, Template, Blaze, Meteor*/
 let callbacks = {};
 
-Component = function (componentName, Ctor) {
-  installComponent(componentName, Ctor);
+Component = function (componentName, factory, templateName) {
+  installComponent(componentName, factory, templateName || componentName);
 };
 
 Component.on = function (eventName, listener) {
@@ -31,16 +31,8 @@ Component.trigger = function (eventName, ...args) {
   }
 };
 
-Component.hookCreateComponent = function (componentName, Ctor, templateInstance) {
-  let component = null;
-
-  if (typeof Ctor === 'function') {
-    component = new Ctor();
-  } else if (typeof Ctor.create === 'function') {
-    component = Ctor.create();
-  } else {
-    component = Object.create(Ctor);
-  }
+Component.hookCreateComponent = function (componentName, factory, templateInstance) {
+  let component = factory();
 
   if (component) {
     component.name = componentName;
@@ -62,10 +54,7 @@ Component.hookDestroyComponent = function (component, templateInstance) {
   }
 };
 
-function installComponent(componentName, Ctor) {
-  let templateName = typeof Ctor.template === 'function' ?
-    Ctor.template() : Ctor.template;
-  templateName = templateName || componentName;
+function installComponent(componentName, factory, templateName) {
   let template = Template[templateName];
 
   if (!template) {
@@ -76,13 +65,13 @@ function installComponent(componentName, Ctor) {
     throw new Error(`Template "${templateName}" already bound to a component.`);
   }
 
-  Component[componentName] = Ctor;
   // Mark the template as being in use by a component. This will prevent
   // other components from being installed with this template.
   template.$component = true;
   Template[componentName] = template;
+  Component[componentName] = factory;
 
-  Component.trigger('installing', componentName, Ctor, template);
+  Component.trigger('installing', componentName, factory, template);
 
   // We depend on a very small set of Blaze APIs to get the job done.
   // We override the constructView() method so that we can copy the
@@ -109,13 +98,13 @@ function installComponent(componentName, Ctor) {
     }
 
     componentTemplate.onCreated(function () {
-      Component.trigger('creating', componentName, Ctor, this);
+      Component.trigger('creating', componentName, factory, this);
 
       let component = null;
 
       // Use the hookCreateComponent() if it exists.
       if (typeof Component.hookCreateComponent === 'function') {
-        component = Component.hookCreateComponent(componentName, Ctor, this);
+        component = Component.hookCreateComponent(componentName, factory, this);
       } else {
         throw new Error('Component.hookCreateComponent must be a function.');
       }
@@ -221,7 +210,7 @@ function installComponent(componentName, Ctor) {
     return view;
   };
 
-  Component.trigger('installed', componentName, Ctor, template);
+  Component.trigger('installed', componentName, factory, template);
 }
 
 // Enumerate the defined component types. For each component
@@ -233,8 +222,61 @@ Meteor.startup(function () {
       ComponentUtil.startsWith(componentName, 'hook') ||
       ComponentUtil.startsWith(componentName, 'trigger'))) {
 
-      let Ctor = Component[componentName];
-      Component(componentName, Ctor);
+      let def = Component[componentName];
+      let templateName = def && typeof def.template === 'function' ?
+        def.template() : !!def && def.template;
+
+      if (typeof def === 'function') {
+        let Ctor = def;
+        let factory = function (...args) {
+          if (this instanceof Ctor) {
+            Ctor.apply(this, args);
+          } else {
+            switch (args.length) {
+              case 0:
+                return new Ctor();
+              case 1:
+                return new Ctor(args[0]);
+              case 2:
+                return new Ctor(args[0], args[1]);
+              case 3:
+                return new Ctor(args[0], args[1], args[2]);
+              case 4:
+                return new Ctor(args[0], args[1], args[2], args[3]);
+              case 5:
+                return new Ctor(args[0], args[1], args[2], args[3], args[4]);
+              case 6:
+                return new Ctor(args[0], args[1], args[2], args[3], args[4],
+                  args[5]);
+              case 7:
+                return new Ctor(args[0], args[1], args[2], args[3], args[4],
+                  args[5], args[6]);
+              case 8:
+                return new Ctor(args[0], args[1], args[2], args[3], args[4],
+                  args[5], args[6], args[7]);
+              case 9:
+                return new Ctor(args[0], args[1], args[2], args[3], args[4],
+                  args[5], args[6], args[7], args[8]);
+              case 10:
+                return new Ctor(args[0], args[1], args[2], args[3], args[4],
+                  args[5], args[6], args[7], args[8], args[9]);
+              default:
+                throw new Error('Too many arguments for component constructor.');
+            }
+          }
+        };
+        factory.prototype = Ctor.prototype;
+        factory.$definition = def;
+        Component(componentName, factory, templateName);
+      } else if (def && typeof def === 'object' && !Array.isArray(def)) {
+        let factory = function () {
+          return Object.create(def);
+        };
+        factory.$definition = def;
+        Component(componentName, factory, templateName);
+      } else {
+        throw new Error(`Unrecognized component definition. [${componentName}]`);
+      }
     }
   }
 });

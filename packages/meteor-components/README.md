@@ -43,25 +43,19 @@ provide a convenient mechanism to define modular logic for your templates.
     };
 
 
-# Reference
+# Component Definition
 
-## Component
-
-Global used to hold component definitions.
-
-**Example:**
-
-    Component.MyComponent = class {
-      /* component prototype methods */
-    }
-
-There are several ways to define a component.
+Components can be defined by setting properties on the `Component` global.
+The follow describes the different styles a component can be defined.
 
 **Constructor style**
 
     // ES6
     Component.MyComponent = class {
       constructor() {
+        /* optional template name as a static method */
+        static templateName() { return 'myTemplate'; }
+
         /* component instance properties */
       }
 
@@ -72,12 +66,22 @@ There are several ways to define a component.
     Component.MyComponent = function {
       /* component instance properties */
     }
+    /* optional template name as a static method */
+    Component.MyComponent.templateName() { return 'myTemplate'; }
+    /* optional template name as a static property */
+    Component.MyComponent.templateName = 'myTemplate';
+
     /* component prototype properties */
-    Component.MyComponent.prototype.instanceMethod = function () {};
+    Component.MyComponent.prototype.method = function () {};
 
 **Object style**
 
     Component.MyComponent = {
+      /* optional template name as a method */
+      templateName() { return 'myTemplate'; }
+      /* optional template name as a property */
+      templateName: 'myTemplate';
+
       /* component instance properties */
     }
 
@@ -86,13 +90,85 @@ A polyfil is included so ES3 environments are still supported.
 
 **Factory style**
 
-    Component.MyComponent = {
-      create: function () {
-        return {
-          /* compenent instance properties */
-        };
+    Component('MyComponent', function () {
+      return {
+        /* component instance properties */
+      };
+    }, 'templateName')
+
+The template name is optional and will default to the component name if not
+specified.
+
+All other component definition styles are actually built on top of the factory
+style. After `Meteor` has started up, the component system enumerates all
+component definition properties on `Component` and appropriately wraps them in
+a factory function that is passed to `Component()`.
+
+
+# Component Extension
+
+No matter how a component was defined it can be consistently extended in a
+sensical fashion based on the new component defintion style.
+
+**Constructor style**
+
+    // ES6
+    Component.MyComponentXX = class extends Component.BaseComponent {
+      constructor() {
+        super()
       }
     }
+
+    // ES3/5
+    Component.MyComponentXX = function () {
+      Component.BaseComponent.call(this);
+    }
+    Component.MyComponentXX = Object.create(Component.BaseComponent.prototype)
+
+**Object style**
+
+    Component.MyComponentXX = Object.assign(Object.create(Component.BaseComponent()), {
+      /* component instance properties */
+    })
+
+**Factory style**
+
+    Component('MyComponentXX', function () {
+      return Object.assign(Object.create(Component.BaseComponent()), {
+        /* component instance properties */
+      })
+    })
+
+**Getting access to the original definition**
+
+Sometimes it's beneficial to know how a component was defined. To find
+out what the original component definition was before it was wrapped in a
+factory function inpsect the `$definition` property on the factory function.
+
+It's important to note that changing the value of the `$definition` property
+will not have any affect on the output of the factory function. However,
+all in-place modifications will be reflected in the factory function result.
+
+**Example:**
+
+    // All three components are defined differently
+
+    Component.ComponentA = {}
+    Component('B', function () {})
+    Component.ComponentC = class {}
+
+    // After Meteor stats up the component system picks up
+    // ComponentA and ComponentC and wraps them in a factory function
+    // to pass to Component() and sets a $definition property on the
+    // factory function.
+
+    Component.ComponentA.$definition // original object
+    Component.ComponentB.$definition // undefined (since defined as a factory)
+    Component.ComponentC.$definition // origin constructor
+
+
+
+# Reference
 
 ### Component Lifecycle Methods
 
@@ -100,7 +176,7 @@ A polyfil is included so ES3 environments are still supported.
 
 Each component can optionally define the following lifecycle methods.
 
-## Component#initialize
+## component.initialize
 
     initialize()
 
@@ -115,7 +191,7 @@ used to initialize the state of the component.
       }
     }
 
-## Component#ready
+## component.ready
 
     ready()
 
@@ -130,7 +206,7 @@ This method is used to initialize the DOM.
       }
     }
 
-## Component#rerender
+## component.rerender
 
     rerender()
 
@@ -145,7 +221,7 @@ initialize the DOM.
       }
     }
 
-## Component#destroy
+## component.destroy
 
     destroy()
 
@@ -166,7 +242,7 @@ method is used to release resource.
 
 ---
 
-## Component#templateInstance
+## component.templateInstance
 
     this.templateInstance
 
@@ -186,7 +262,7 @@ component has been constructed.
       }
     }
 
-## Component#name
+## component.name
 
     this.name
 
@@ -205,7 +281,7 @@ property is only valid after the component has been constructed.
       }
     }
 
-## Component#parent
+## component.parent
 
     this.parent
 
@@ -240,7 +316,7 @@ valid after the component has been constructed.
       {{/App}}
     </body>
 
-## Component#children
+## component.children
 
     this.children
 
@@ -275,7 +351,7 @@ the component has been constructed.
       {{/App}}
     </body>
 
-## Component#helpers
+## component.helpers
 
     helpers()
 
@@ -300,7 +376,7 @@ the component.
       }
     }
 
-## Component#events
+## component.events
 
     events()
 
@@ -330,7 +406,7 @@ the component.
 
 ---
 
-## Component#data
+## component.data
 
     data()
     data(keyPath)
@@ -342,7 +418,7 @@ call with a key path is reactive. Behind the scenes the key path is passed to
 
 See [template.data](http://docs.meteor.com/#/full/template_data).
 
-## Component#currentData
+## component.currentData
 
     currentData()
 
@@ -350,7 +426,7 @@ Wrapper for accessing `Template.currentData()`.
 
 See [Template.currentData](http://docs.meteor.com/#/full/template_currentdata).
 
-## Component#findAll
+## component.findAll
 
     findAll(selector)
 
@@ -358,7 +434,7 @@ Wrapper for accessing `templateInstance.findAll()`.
 
 See [template.findAll](http://docs.meteor.com/#/full/template_findAll).
 
-## Component#$
+## component.$
 
     $(selector)
 
@@ -366,7 +442,7 @@ Wrapper for accessing `templateInstance.$()`.
 
 See [template.$](http://docs.meteor.com/#/full/template_$).
 
-## Component#find
+## component.find
 
     find(selector)
 
@@ -374,7 +450,7 @@ Wrapper for accessing `templateInstance.find()`.
 
 See [template.find](http://docs.meteor.com/#/full/template_find).
 
-## Component#firstNode
+## component.firstNode
 
     firstNode()
 
@@ -382,7 +458,7 @@ Wrapper for accessing `templateInstance.firstNode`.
 
 See [template.firstNode](http://docs.meteor.com/#/full/template_firstNode).
 
-## Component#lastNode
+## component.lastNode
 
     lastNode()
 
@@ -390,7 +466,7 @@ Wrapper for accessing `templateInstance.lastNode`.
 
 See [template.lastNode](http://docs.meteor.com/#/full/template_lastNode).
 
-## Component#autorun
+## component.autorun
 
     autorun(runFunc)
 
@@ -398,7 +474,7 @@ Wrapper for accessing `templateInstance.autorun()`.
 
 See [template.autorun](http://docs.meteor.com/#/full/template_autorun).
 
-## Component#subscribe
+## component.subscribe
 
     subscribe(name, [arg1, arg2, ...], [options])
 
@@ -406,7 +482,7 @@ Wrapper for accessing `templateInstance.subscribe()`.
 
 See [template.subscribe](http://docs.meteor.com/#/full/template_subscribe).
 
-## Component#view
+## component.view
 
     view()
 
@@ -419,52 +495,52 @@ See [template.view](http://docs.meteor.com/#/full/template_view).
 
 ---
 
-## Component#setTimeout
+## component.setTimeout
 
     setTimeout(fn, [delay]): id
 
 Convenient method to create a timeout that will automatically be cleared when
 the component is destroyed.
 
-## Component#clearTimeout
+## component.clearTimeout
 
     clearTimeout(id)
 
 Attempts to clear a timeout by ID. Can be an ID returned from the global
 `setTimeout()`.
 
-## Component#clearTimeouts
+## component.clearTimeouts
 
     clearTimeouts()
 
-Clears all timeouts created by this compnent via `Component#setTimeout()`.
+Clears all timeouts created by this compnent via `component.setTimeout()`.
 
-## Component#setInterval
+## component.setInterval
 
     setInterval(fn, [delay]): id
 
 Convenient method to create an interval that will automatically be cleared when
 the component is destroyed.
 
-## Component#clearInterval
+## component.clearInterval
 
     clearInterval(id)
 
 Attempts to clear an interval by ID. Can be an ID returned from the global
 `setInterval()`.
 
-## Component#clearIntervals
+## component.clearIntervals
 
     clearIntervals()
 
-Clears all intervals created by this compnent via `Component#setInterval()`.
+Clears all intervals created by this compnent via `component.setInterval()`.
 
 
 ### DOM References
 
 ---
 
-## Component#refs
+## component.refs
 
 As a convenience any element that has a `data-ref` or `ref` attribute set to
 a name will be automatically selected and referenced on `refs`. However, since
@@ -504,37 +580,30 @@ form a mixin chain, where each mixin may choose to delegate a method call to the
 mixin further down the chain, and as such the order in which mixins are registered
 is imporant.
 
-## Compnent#mixins
+## component.mixins
 
     mixins()
 
 Registers a chain of mixins for this component. Each mixin can be one of the
 following.
 
-- A constructor function.
+- A factory function.
 - An object instance.
-- An object or function with the method `create()`.
-
-If a mixin is a constructor function then the mixin will be constructed with no
-arguments (i.e. default constructor will be used).
 
 If a mixin is an object instance then the mixin will be constructed via a call
 to `Object.create()`.
-
-If a mixin is an object with a `create()` method then the mixin will be
-constructed by calling `create()` with no arguments.
 
 **Example:**
 
     Component.MyComponent = class {
       mixins() {
         return [
-          SomeConstructor,
           someObject,
-          {
-            create() {
-              return {};
-            }
+          function () {
+            return {};
+          },
+          function () {
+            return new MyMixin();
           }
         ];
       }
@@ -568,7 +637,7 @@ These methods must return a hash of helpers or events respectively. Each event
 or helper function will be bound to the mixin instance so they behave more like
 methods of the mixin when invoked.
 
-## Component#getFirstWith and Mixin#getFirstWith
+## component.getFirstWith and mixin.getFirstWith
 
     getFirstWith(origin, prop)
 
@@ -612,7 +681,7 @@ component instance followed by all mixin instances.
     }
 
 
-## Component#callFirstWith and Mixin#callFirstWith
+## component.callFirstWith and mixin.callFirstWith
 
     callFirstWith(origin, prop, [...args])
 
@@ -720,7 +789,7 @@ arguments passed in.
 
 **Example:**
 
-    Component.on('installing', function (componentName, Ctor, template) {
+    Component.on('installing', function (componentName, factory, template) {
       console.log('installing component:', componentName);
     });
 
@@ -765,28 +834,19 @@ following hooks.
 When overriding `hookCreateComponent()` you must take care of the following
 responsibilities.
 
-- Constructing/creating the component instance
+- Creating the component instance by calling the factory function
 - Setting the `name` and `templateInstance` properties
-- Triggering `initializing` callbacks
+- Triggering `initializing` event
 - Calling `component.initialize()` if it exists
 - Returning the component instance
 
-To trigger registered callbacks use `Component.trigger(callbacksName, ...args)`.
+To trigger an event use `Component.trigger(eventName, ...args)`.
 
 **Example:**
 
-    Component.hookCreateComponent = function (name, Ctor, templateInst) {
+    Component.hookCreateComponent = function (name, factory, templateInst) {
       // Do our own component creation.
-
-      let component = null;
-
-      if (typeof Ctor === 'function') {
-        component = new Ctor();
-      } else if (typeof Ctor.create === 'function') {
-        component = Ctor.create();
-      } else {
-        component = Object.create(Ctor);
-      }
+      let component = factory();
 
       component.name = name;
       component.templateInstance = templateInst;
@@ -796,6 +856,19 @@ To trigger registered callbacks use `Component.trigger(callbacksName, ...args)`.
       if (typeof component.initialize === 'function') component.initialize();
 
       return component;
+    };
+
+
+    // Or more simply
+    let hookCreateComponent = Component.hookCreateComponent;
+    Component.hookCreateComponent = function (name, factory, templateInst) {
+      return hookCreateComponent(name, function () {
+        let component = factory();
+
+        console.log('creating component:', name);
+
+        return component;
+      }, templateInst);
     };
 
 **Destroy Hook**
