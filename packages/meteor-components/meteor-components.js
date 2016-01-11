@@ -61,14 +61,15 @@ function installComponent(componentName, factory, templateName) {
     throw new Error(`Template not found "${templateName}"`);
   }
 
-  if (template.$component === true) {
-    throw new Error(`Template "${templateName}" already bound to a component.`);
+  // Components can re-use template that have been used by other components.
+  // Here we check to see if the component name and template name are different
+  // and if they are then we clone the template and assign it to the compnonent
+  // name. This way we only clone the template when we absolutely need to.
+  if (templateName !== componentName) {
+    template = cloneTemplate(template);
+    Template[componentName] = template;
   }
 
-  // Mark the template as being in use by a component. This will prevent
-  // other components from being installed with this template.
-  template.$component = true;
-  Template[componentName] = template;
   Component[componentName] = factory;
 
   Component.trigger('installing', componentName, factory, template);
@@ -77,25 +78,11 @@ function installComponent(componentName, factory, templateName) {
   // We override the constructView() method so that we can copy the
   // template properties this way any modifications to the template won't affect
   // other templateInstances/views.
-  let constructView = template.constructView;
+  let constructView = Template.prototype.constructView;
   template.constructView = function (...args) {
-    let componentTemplate = Object.create(template);
-    // We have to copy the helpers, eventMaps and callbacks
-    // properties otherwise we'll be setting helpers and listeners
-    // up for all template instances.
-    if (template.__helpers) {
-      componentTemplate.__helpers = Object.create(template.__helpers);
-    }
-    if (template.__eventMaps) {
-      componentTemplate.__eventMaps = template.__eventMaps.slice();
-    }
-    if (template._callbacks) {
-      componentTemplate._callbacks = {
-        created: template._callbacks.created.slice(),
-        rendered: template._callbacks.rendered.slice(),
-        destroyed: template._callbacks.destroyed.slice()
-      };
-    }
+    // We have to copy the template because our component adds its own
+    // helpers and events when the template is instantiated.
+    let componentTemplate = cloneTemplate(template);
 
     componentTemplate.onCreated(function () {
       Component.trigger('creating', componentName, factory, this);
@@ -211,6 +198,26 @@ function installComponent(componentName, factory, templateName) {
   };
 
   Component.trigger('installed', componentName, factory, template);
+}
+
+function cloneTemplate(template) {
+  let tpl = Object.create(template);
+
+  if (template.__helpers) {
+    tpl.__helpers = Object.create(template.__helpers);
+  }
+  if (template.__eventMaps) {
+    tpl.__eventMaps = template.__eventMaps.slice();
+  }
+  if (template._callbacks) {
+    tpl._callbacks = {
+      created: template._callbacks.created.slice(),
+      rendered: template._callbacks.rendered.slice(),
+      destroyed: template._callbacks.destroyed.slice()
+    };
+  }
+
+  return tpl;
 }
 
 // Enumerate the defined component types. For each component

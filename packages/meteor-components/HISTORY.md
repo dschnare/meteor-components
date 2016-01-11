@@ -1,3 +1,28 @@
+# 0.10.0
+
+**Jan. 11, 2016**
+
+feat(tempate re-use) Add ability to re-use templates
+
+Add ability to re-use templates used by other components. Now compnents can
+be created that target a common template.
+
+    Component.CompnentA = class {
+      static template() { return 'Common'; }
+    }
+
+    Component.CompnentB = class {
+      static template() { return 'Common'; }
+    }
+
+    <template name="Common">
+      <div data-component="{{componentName}}">
+        {{> Template.contentBlock this}}
+      </div>
+    <template>
+
+
+
 # 0.9.0
 
 **Jan. 7, 2016**

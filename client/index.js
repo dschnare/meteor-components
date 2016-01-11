@@ -60,20 +60,32 @@ Component.Gravatar = {
   }
 };
 
-Component.Shell = {
-  create() {
-    return {
-      initialize() {
-        console.log('Shell#initialize');
-      },
+Component.Shell = class {
+  initialize() {
+    console.log('Shell#initialize');
+  }
 
-      ready() {
-        console.log('Shell#ready');
-      },
+  ready() {
+    console.log('Shell#ready');
+  }
 
-      destroy() {
-        console.log('Shell#destroy');
-      }
-    };
+  destroy() {
+    console.log('Shell#destroy');
+  }
+};
+
+Component.Shell2 = class {
+  static template() { return 'Shell'; }
+
+  initialize() {
+    console.log('Shell2#initialize');
+  }
+
+  ready() {
+    console.log('Shell2#ready');
+  }
+
+  destroy() {
+    console.log('Shell2#destroy');
   }
 };
