@@ -1,5 +1,6 @@
 /*global Component, ComponentUtil, Template, Blaze, Meteor*/
 let callbacks = {};
+let factories = {};
 
 Component = function (componentName, factory, templateName) {
   installComponent(componentName, factory, templateName || componentName);
@@ -29,6 +30,22 @@ Component.trigger = function (eventName, ...args) {
       listener(...args);
     }
   }
+};
+
+Component.getFactory = (componentName) => factories[componentName];
+
+Component.extend = (baseComponentName, factory) => {
+  let base = null;
+
+  if (typeof Component.MyComponent === 'function') {
+    base = new Component.MyComponent();
+  } else if (Component.MyCompoennt) {
+    base = Component.MyComponent;
+  } else {
+    base = Component.getFactory('MyComponent')();
+  }
+
+  return Object.assign(Object.create(base), factory(base));
 };
 
 Component.hookCreateComponent = function (componentName, factory, templateInstance) {
@@ -61,6 +78,10 @@ function installComponent(componentName, factory, templateName) {
     throw new Error(`Template not found "${templateName}"`);
   }
 
+  if (componentName in factories) {
+    throw new Error(`Compnent ${componentName} already defined.`);
+  }
+
   // Components can re-use template that have been used by other components.
   // Here we check to see if the component name and template name are different
   // and if they are then we clone the template and assign it to the compnonent
@@ -70,7 +91,7 @@ function installComponent(componentName, factory, templateName) {
     Template[componentName] = template;
   }
 
-  Component[componentName] = factory;
+  factories[componentName] = factory;
 
   Component.trigger('installing', componentName, factory, template);
 
@@ -220,14 +241,19 @@ function cloneTemplate(template) {
   return tpl;
 }
 
+// Grab all the properties that are on the Component so we can quickly skip
+// over them when enumerating component definitions.
+let properties = [];
+for (let key in Component) {
+  properties.push(key);
+}
+
 // Enumerate the defined component types. For each component
 // type we install it by calling Component() appropriately.
 Meteor.startup(function () {
   for (let componentName in Component) {
-    // Skip over properties that start with 'on', 'hook' or 'trigger'.
-    if (!(ComponentUtil.startsWith(componentName, 'on') ||
-      ComponentUtil.startsWith(componentName, 'hook') ||
-      ComponentUtil.startsWith(componentName, 'trigger'))) {
+    // Skip over properties that are not component definitions.
+    if (properties.indexOf(componentName) < 0) {
 
       let def = Component[componentName];
       let templateName = def && typeof def.template === 'function' ?
@@ -268,21 +294,16 @@ Meteor.startup(function () {
                 return new Ctor(args[0], args[1], args[2], args[3], args[4],
                   args[5], args[6], args[7], args[8], args[9]);
               default:
-                throw new Error('Too many arguments for component constructor.');
+                throw new Error('Too many arguments for' +
+                  ' component constructor.');
             }
           }
         };
-        factory.prototype = Ctor.prototype;
-        factory.$definition = def;
         Component(componentName, factory, templateName);
       } else if (def && typeof def === 'object' && !Array.isArray(def)) {
-        let factory = function () {
-          return Object.create(def);
-        };
-        factory.$definition = def;
-        Component(componentName, factory, templateName);
+        Component(componentName, () => Object.create(def), templateName);
       } else {
-        throw new Error(`Unrecognized component definition. [${componentName}]`);
+        throw new Error('Unrecognized component definition. ' + componentName);
       }
     }
   }

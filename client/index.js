@@ -44,7 +44,7 @@ Component.Gravatar = {
   // that is only available on the component instance and
   // cannot be used by the template directly.
   sayHello: function () {
-    alert('Say hello!');
+    alert('Hello from ' + this.data('id') + '!');
   },
 
   initialize: function () {

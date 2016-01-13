@@ -104,13 +104,63 @@ style. After `Meteor` has started up, the component system enumerates all
 component definition properties on `Component` and appropriately wraps them in
 a factory function that is passed to `Component()`.
 
+**Getting access to the original definition**
+
+Sometimes it's beneficial to know how a component was defined say for extension
+purposes. To find out what the original component definition was you can
+simply inspect `Compnent` with the component's name. If the property is not
+defined then the component was defined using `Component()` directly. Otherwise
+if the component is a function then the component is a constructor/class and if
+the component is an object then it was defined using the object style definition
+style.
+
+**Example:**
+
+    // All three components are defined differently
+
+    Component.ComponentA = {}
+    Component('B', function () {})
+    Component.ComponentC = class {}
+
+    // After Meteor stats up the component system picks up
+    // ComponentA and ComponentC and wraps them in a factory function
+    // to pass to Component() but leaves the original properties on
+    // Component as-is.
+
+    Component.ComponentA // original object
+    Component.ComponentB // undefined (since defined as a factory)
+    Component.ComponentC // origin constructor
+
+As a convenience you can get factory functions for any component if you need
+them for some advanced purpose. Just use `Component.getFactory()`.
+
+**Example:**
+
+    // Continuing from the example above
+
+    Component.getFactory('ComponentA') // the factory function for CompnentA
+    Component.getFactory('ComponentB') // the factory function for CompnentB
+    Component.getFactory('ComponentC') // the factory function for CompnentC
+
+**Checking component defintion style**
+
+To dynamically determine how a component was defined you can perform the
+following check.
+
+    if (typeof Component.MyComponent === 'function') {
+      // a constructor
+    } else if (Component.MyCompoennt) {
+      // an object
+    } else {
+      // a factory
+    }
+
 
 # Component Extension
 
-No matter how a component was defined it can be consistently extended in a
-sensical fashion based on the new component defintion style.
+Component extention style depends on how the base component was defined.
 
-**Constructor style**
+**Base defined using constructor style**
 
     // ES6
     Component.MyComponentXX = class extends Component.BaseComponent {
@@ -125,35 +175,53 @@ sensical fashion based on the new component defintion style.
     }
     Component.MyComponentXX = Object.create(Component.BaseComponent.prototype)
 
-**Object style**
+**Base defined using object style**
 
     Component.MyComponentXX = Object.assign(Object.create(Component.BaseComponent()), {
       /* component instance properties */
     })
 
-**Factory style**
+`Object.assign()` has been polyfilled for ES3 environments so it's safe to
+depend on.
+
+**Base defined using factory style**
 
     Component('MyComponentXX', function () {
-      return Object.assign(Object.create(Component.BaseComponent()), {
+      let baseFactory = Component.getFactory('BaseComponent');
+      return Object.assign(Object.create(baseFactory()), {
         /* component instance properties */
       })
     })
 
-**Constructor mascarade**
+**Base defined using an unknown style**
+
+If you don't know how a component was defined then use `Component.extend()`.
+This creates a new object style component definition.
+
+    Component.MyBetterComponent = Component.extend('MyComponent', (base) => {
+      // use base to call methods on the base prototype.
+      // Example: base.doStuff()
+
+      return {
+        /* component instance properites*/
+      };
+    })
+
+
+**Constructor parameters**
 
 As a convenience when components are defined as a constructor/class the
-constructor-like behaviour is mascaraded onto the factor function so that
-the factory function can be extended like a constructor/class (as seen above),
-and also accept arguments that will be passed to the constructor.
+factory created can optionally accept arguments that will be passed to
+the constructor.
 
 By default the component system will not pass any arguments to the factory
 functions, but this feature may make it easier to pass in dependencies to
-base components (i.e. components meant to be extended) or by a plugin that
-overrides `Component.hookCreateComponent()`.
+base components so their behaviour can change or by a plugin that overrides
+`Component.hookCreateComponent()`.
 
 **Example:**
 
-    Component.SomeComponent = class {
+    Component.MyComponent = class {
       constructor(a) {
         if (a) {
           /* do something special with a */
@@ -161,37 +229,9 @@ overrides `Component.hookCreateComponent()`.
       }
     }
 
-    Component.SubComponent = class extends Component.SomeComponent {
+    Component.MyBetterComponent = class extends Component.MyComponent {
       super({ name: 'this is a' });
     }
-
-**Getting access to the original definition**
-
-Sometimes it's beneficial to know how a component was defined. To find
-out what the original component definition was before it was wrapped in a
-factory function inpsect the `$definition` property on the factory function.
-
-It's important to note that changing the value of the `$definition` property
-will not have any affect on the output of the factory function. However,
-all in-place modifications will be reflected in the factory function result.
-
-**Example:**
-
-    // All three components are defined differently
-
-    Component.ComponentA = {}
-    Component('B', function () {})
-    Component.ComponentC = class {}
-
-    // After Meteor stats up the component system picks up
-    // ComponentA and ComponentC and wraps them in a factory function
-    // to pass to Component() and sets a $definition property on the
-    // factory function.
-
-    Component.ComponentA.$definition // original object
-    Component.ComponentB.$definition // undefined (since defined as a factory)
-    Component.ComponentC.$definition // origin constructor
-
 
 
 # Reference

@@ -1,3 +1,51 @@
+# 0.11.0
+
+**Jan. 13, 2016**
+
+refactor(Component) Refactor component defintion logic
+
+When components are installed their factory functions will not have $defintion
+set on it nor will constructor style component definitions have their
+prototypes set on the factory function. Also, when defining a component as a
+prpoerty on the Component global, these properties are left unmodified. To
+still permit access to the factory functions the Component.getFactory() method
+was added.
+
+The docs were also updated to reflect the correct way to extend components. The
+docs originally had incorrect information. To help with component extension
+the Component.extend() method was added.
+
+
+BREAKING CHANGE: Factory functions no longer have prototype or $definition set
+as properties.
+
+Before:
+
+    Component.MyComponent = class {}
+
+    Meteor.startup(() => {
+      /* do something to the defintion */
+      let cls = Component.MyComponent.$defintion;
+
+      /* get the factory */
+      let factory = Component.MyComponent;
+    })
+
+After:
+
+    Component.MyComponent = class {}
+
+    Meteor.startup(() => {
+      /* do something to the defintion */
+      let cls = Component.MyComponent;
+
+      /* get the factory */
+      let factory = Component.getFactory('MyComponent');
+    })
+
+
+
+
 # 0.10.0
 
 **Jan. 11, 2016**
