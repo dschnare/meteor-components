@@ -14,6 +14,7 @@
     "packages/meteor-components/plugins/mixins/getFirstWith.js",
     "packages/meteor-components/plugins/mixins/callFirstWith.js",
     "packages/meteor-components/plugins/mixins/instantiateMixin.js",
-    "packages/meteor-components/plugins/mixins/plugin.js"
+    "packages/meteor-components/plugins/mixins/plugin.js",
+    "packages/meteor-components/plugins/attachedProperties/plugin.js"
   ]
 }

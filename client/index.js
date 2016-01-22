@@ -49,6 +49,10 @@ Component.Gravatar = {
 
   initialize: function () {
     console.log('Gravatar#initialize', this.parent);
+    console.log('Gravatar attached property (x.name):',
+      this.attachedProperties('x')('name').nonReactive());
+     console.log('Gravatar attached property (x.name):',
+      this.attachedProperty('x.name').nonReactive());
   },
 
   ready: function () {

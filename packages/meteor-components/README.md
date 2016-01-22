@@ -467,6 +467,110 @@ the component.
       }
     }
 
+### Attached Properties
+
+---
+
+Each component supports the concept of attached properties. These properties
+are inspired by the attached dependency properties in WPF XAML markup that help
+parent components modify the behaviour or presentation of their child components.
+
+## component.attachedProperty
+
+    attachedProperty(name)
+
+Convenience method to retrieve an attached property even when not defined.
+Returns a function that when called will reactively retrieve the attached
+property. This function also has a `nonReactive()` method that will
+non-reactively retrieve the attached property.
+
+If the property is not defined then the returned function and its
+`nonReactive()` method will return `undefined`.
+
+**Example:**
+
+    <template name="Hi">
+      Hello World!
+    </template>
+
+    <template name="HorizontalStack">
+      {{> Template.contentBlock this}}
+    </template>
+
+    <body>
+      {{#HorizontalStack}}
+        {{> Hi HorizontalStack.sticky=true}}
+      {{/HorizontalStack}}
+    </body>
+
+    Component.Hi = {}
+    Component.HorizontalStack = class {
+      ready() {
+        this.layout();
+      }
+
+      layout() {
+        for (let child of this.children) {
+          let sticky = child.attachedProperty('HorizontalStack.sticky)();
+          // or non-reactively
+          // sticky = child.attachedProperty('HorizontalStack.sticky).nonReactive();
+
+          if (!!sticky) {
+            /* layout as a sticky child */
+          } else {
+            /* layout as usual */
+          }
+        }
+      }
+    }
+
+## component.attachedProperties
+
+    attachedProperties(namespace)
+
+Convenience method for retrieving multiple attached properties under the same
+namespace. Returns a function that can be used to retrieve an attached property
+under the specified namespace. When calling this function its return value is
+the same as calling `attachedProperty()`.
+
+**Example:**
+
+    <template name="Hi">
+      Hello World!
+    </template>
+
+    <template name="HorizontalStack">
+      {{> Template.contentBlock this}}
+    </template>
+
+    <body>
+      {{#HorizontalStack}}
+        {{> Hi HorizontalStack.sticky=true}}
+      {{/HorizontalStack}}
+    </body>
+
+    Component.Hi = {}
+    Component.HorizontalStack = class {
+      ready() {
+        this.layout();
+      }
+
+      layout() {
+        for (let child of this.children) {
+          let hstackProps = child.attachedProperties('HorizontalStack')
+          let sticky = hstackProps('sticky')()
+          // or non-reactively
+          // let sticky = hstackProps('sticky').nonReactive()
+
+          if (!!sticky) {
+            /* layout as a sticky child */
+          } else {
+            /* layout as usual */
+          }
+        }
+      }
+    }
+
 
 ### Template Instance Wrappers
 

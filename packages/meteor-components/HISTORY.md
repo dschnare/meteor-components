@@ -1,3 +1,21 @@
+# 0.12.0
+
+**Jan. 21, 2016**
+
+feat(attached props) Add plugin to handle attached properties
+
+Add plugin to install attachedProperties() and attachedProperty() methods on
+all components before they are initialized. These methods make it easier to
+retrieve attached properties on a component's data context. Attached properties
+have names with the following format:
+
+  Namespace.Name
+
+This concept is inspired by the attached dependency properties in WPF XAML
+markup. The idea is that parent components could use attached properties with a
+namespace they recognize to modify child component behaviour.
+
+
 # 0.11.0
 
 **Jan. 13, 2016**

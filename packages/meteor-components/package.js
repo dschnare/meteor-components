@@ -1,7 +1,7 @@
 /*global Package*/
 Package.describe({
   name: 'dschnare:meteor-components',
-  version: '0.11.0',
+  version: '0.12.0',
   // Brief, one-line summary of the package.
   summary: 'Simple, lightweight component extension for Meteor templates.',
   // URL to the Git repository containing the source code for this package.
@@ -37,7 +37,9 @@ Package.onUse(function(api) {
     // Mixins plugin
     'plugins/mixins/getFirstWith.js',
     'plugins/mixins/callFirstWith.js',
-    'plugins/mixins/plugin.js'
+    'plugins/mixins/plugin.js',
+    // Attached properties plugin
+    'plugins/attachedProperties/plugin.js'
   ], 'client');
 
   api.export([
